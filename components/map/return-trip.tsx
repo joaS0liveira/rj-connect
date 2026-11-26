@@ -8,7 +8,7 @@ import {
   Copy,
   MapPin,
   Printer,
-  Ticket,
+  FileText,
 } from "@phosphor-icons/react"
 import { useEffect, useState } from "react"
 import { date, integer } from "@/lib/fica/format"
@@ -166,7 +166,7 @@ export function ReturnTrip({
         Ajuda uma pessoa a voltar ao trabalho, sem mais um curso.
       </h3>
       <p className="mt-1 text-muted-foreground">
-        Responde a cada paragem. No fim sai um bilhete com o plano e as datas
+        Responde a cada paragem. No fim sai um relatório com o plano e as datas
         dos contactos, pronto para o calendário.
       </p>
 
@@ -454,7 +454,7 @@ export function ReturnTrip({
                     onClick={() => setIssued(true)}
                     className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-primary px-6 font-semibold text-primary-foreground hover:opacity-90 disabled:opacity-40"
                   >
-                    <Ticket aria-hidden="true" /> Emitir bilhete
+                    <FileText aria-hidden="true" /> Emitir relatório
                   </button>
                 </div>
               )}
@@ -539,11 +539,11 @@ function Pass({
     })),
   ]
   const text = [
-    `Bilhete de regresso · ${region}`,
+    `Relatório · ${region}`,
     `${c.label} → ${sector}, ${company}`,
     ...stops.map((s) => `${s.when}: ${s.what}`),
     "",
-    "O que a empresa faz com este bilhete:",
+    "O que a empresa faz com este relatório:",
     ...FOR_COMPANY.map((item, i) => `${i + 1}. ${item}`),
   ].join("\n")
 
@@ -566,7 +566,7 @@ function Pass({
   async function copy() {
     try {
       await navigator.clipboard.writeText(text)
-      onNotice("Bilhete copiado.")
+      onNotice("Relatório copiado.")
     } catch {
       onNotice("Não foi possível copiar. Usa Imprimir.")
     }
@@ -575,7 +575,7 @@ function Pass({
   return (
     <div className="animate-in duration-500 fade-in slide-in-from-bottom-4 motion-reduce:animate-none">
       <article
-        aria-label="Bilhete de regresso"
+        aria-label="Relatório"
         className="overflow-hidden rounded-2xl border bg-card"
       >
         <header className="relative overflow-hidden bg-gradient-to-br from-[#075b60] via-[#0b7d80] to-[#18b8b5] p-5 text-white sm:p-6">
@@ -588,8 +588,7 @@ function Pass({
             className="absolute end-16 -bottom-20 size-40 rounded-full bg-white/10"
           />
           <p className="relative flex items-center gap-2 text-xs font-bold tracking-[0.18em] uppercase">
-            <Ticket weight="fill" aria-hidden="true" /> Bilhete de regresso ·{" "}
-            {region}
+            <FileText weight="fill" aria-hidden="true" /> Relatório · {region}
           </p>
           <div className="relative mt-4 grid items-center gap-3 sm:grid-cols-[1fr_auto_1fr]">
             <div>
@@ -667,7 +666,7 @@ function Pass({
             </ol>
           </section>
           <section
-            aria-label="O que a empresa faz com este bilhete"
+            aria-label="O que a empresa faz com este relatório"
             className="rounded-2xl bg-accent p-4"
           >
             <h4 className="flex items-center gap-2 font-bold">
@@ -676,7 +675,7 @@ function Pass({
                 className="text-primary"
                 aria-hidden="true"
               />
-              O que a empresa faz com este bilhete
+              O que a empresa faz com este relatório
             </h4>
             <ol className="mt-3 space-y-2.5 text-sm">
               {FOR_COMPANY.map((item, i) => (
@@ -718,7 +717,7 @@ function Pass({
           onClick={onRestart}
           className="inline-flex min-h-12 items-center gap-2 rounded-xl border bg-card px-5 font-semibold hover:bg-accent"
         >
-          <ArrowCounterClockwise aria-hidden="true" /> Novo bilhete
+          <ArrowCounterClockwise aria-hidden="true" /> Novo relatório
         </button>
       </div>
       <p role="status" className="mt-2 text-sm text-muted-foreground">
@@ -726,7 +725,7 @@ function Pass({
       </p>
       <p className="mt-2 text-xs text-muted-foreground">
         As ideias são propostas da equipa. As empresas e as contagens vêm dos
-        dados. O bilhete não guarda nomes nem dados da pessoa.
+        dados. O relatório não guarda nomes nem dados da pessoa.
       </p>
     </div>
   )

@@ -83,3 +83,17 @@ export const ALL: Place = {
 }
 
 export const ENTITY_IDS = Object.keys(PLACES) as EntityId[]
+
+/**
+ * Regions that hold others. Each still has its own data, and choosing it
+ * lights up every part: Norte takes in the Minho, and Sul is Lisboa, the
+ * Alentejo and the Algarve together.
+ */
+export const PARTS: Partial<Record<EntityId, EntityId[]>> = {
+  E01: ["E01", "E05"],
+  E04: ["E03", "E06", "E07"],
+}
+
+/** The regions lit up when this one is chosen. */
+export const partsOf = (id: EntityId | "all"): EntityId[] =>
+  id === "all" ? [] : (PARTS[id] ?? [id])

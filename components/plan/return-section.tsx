@@ -7,7 +7,8 @@ import { PageTitle } from "@/components/site-header"
 import { GroupPlan } from "@/components/map/group-plan"
 import { ReturnTrip } from "@/components/map/return-trip"
 import { cellOf, type Analysis } from "@/lib/map/analysis"
-import { ENTITY_IDS, PLACES, type EntityId } from "@/lib/map/places"
+import { RegionOptions } from "@/components/map/region-options"
+import { ENTITY_IDS, type EntityId } from "@/lib/map/places"
 
 /**
  * Integrar+: the team's tool to keep people in work and bring back those who
@@ -67,11 +68,7 @@ export function ReturnSection({ analysis }: { analysis: Analysis }) {
                 value={id}
                 onChange={(e) => choose(e.target.value as EntityId)}
               >
-                {ENTITY_IDS.map((r) => (
-                  <option key={r} value={r}>
-                    {PLACES[r].name}
-                  </option>
-                ))}
+                <RegionOptions />
               </select>
             </label>
             <Segmented

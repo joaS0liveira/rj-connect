@@ -2,8 +2,10 @@
 
 import { useInView } from "motion/react"
 import { useRef, useState } from "react"
+import { Plus } from "@phosphor-icons/react"
 import { Swatch } from "@/components/map/charts"
-import { SiteFooter, SiteHeader } from "@/components/site-header"
+import { Spinner } from "@/components/ui/loader"
+import { SiteFooter } from "@/components/site-header"
 import { integer, percent } from "@/lib/fica/format"
 import { sampleSize, type Pilot } from "@/lib/map/pilot"
 import { PLACES, type EntityId } from "@/lib/map/places"
@@ -61,9 +63,9 @@ const PHASES: {
     when: "Dez. 2026 · 4 semanas",
     title: "Preparar",
     what: [
-      "Confirmar com a E03 como se combinam os contratos.",
+      "Confirmar com a equipa de Lisboa como se combinam os contratos.",
       "Criar três campos: data de fim prevista, quem decidiu o tipo de contrato e motivo de saída dito pelos dois lados.",
-      "Verificar os contactos de 22 a 30 de dezembro, identificar a empresa registada como P99 e rever as 46 colocações que terminam antes de começar.",
+      "Verificar os contactos de 22 a 30 de dezembro, identificar a empresa que não está na lista de parceiras e rever as 46 colocações que terminam antes de começar.",
       "Escrever, antes de começar, o que conta como sucesso.",
     ],
     output: "Regras fixadas antes de começar",
@@ -72,7 +74,7 @@ const PHASES: {
     when: "Jan.–mai. 2027",
     title: "Arrancar o piloto",
     what: [
-      "Cada nova colocação temporária da E03 é sorteada para um de dois grupos.",
+      "Cada nova colocação temporária de Lisboa é sorteada para um de dois grupos.",
       "Reforçado: lista semanal, contacto ao dia 45, contacto 30 dias antes do fim previsto e um pedido à empresa: renovar, prolongar ou dizer porquê não.",
       "Habitual: o acompanhamento de hoje.",
     ],
@@ -99,8 +101,8 @@ const PHASES: {
   {
     when: "2028",
     title: "Alargar",
-    what: ["Levar às entidades com mais temporários, com o mesmo painel."],
-    output: "Mesmo método, mais entidades",
+    what: ["Levar às regiões com mais temporários, com o mesmo painel."],
+    output: "Mesmo método, mais regiões",
   },
 ]
 
@@ -140,7 +142,6 @@ const INDICATORS: { name: string; today: boolean; note: string }[] = [
 export function PlanPage({ pilot }: { pilot: Pilot }) {
   return (
     <div className="rj-page rj-report mx-auto max-w-6xl px-4 py-4 sm:px-8 sm:py-6">
-      <SiteHeader />
       <main>
         <Timeline />
         <Timing pilot={pilot} />
@@ -170,11 +171,11 @@ export function PlanPage({ pilot }: { pilot: Pilot }) {
             </ul>
           </section>
           <section className="min-w-0">
-            <SectionTitle kicker="Alargar" title="Noutras entidades" />
+            <SectionTitle kicker="Alargar" title="Noutras regiões" />
             <p className="mt-2 text-muted-foreground">
-              A conta usa só datas, contrato, entidade e empresa: uma entidade
-              nova entra no painel sem mudar a app. Com menos de 20 casos
-              aparece com aviso.
+              A conta usa só datas, contrato, região e empresa: uma região nova
+              entra no painel sem mudar a app. Com menos de 20 casos aparece com
+              aviso.
             </p>
             <OtherEntities pilot={pilot} />
           </section>
@@ -234,10 +235,10 @@ function Timing({ pilot }: { pilot: Pilot }) {
         <figure>
           <p className="flex flex-wrap gap-4 text-sm">
             <span className="inline-flex items-center gap-2">
-              <Swatch color="var(--rj-focus-bar)" /> Lisboa (E03)
+              <Swatch color="var(--rj-focus-bar)" /> Lisboa
             </span>
             <span className="inline-flex items-center gap-2">
-              <Swatch color="var(--rj-rest-bar)" /> Outras sete entidades
+              <Swatch color="var(--rj-rest-bar)" /> Outras sete regiões
             </span>
           </p>
           <div
@@ -360,6 +361,9 @@ function Timing({ pilot }: { pilot: Pilot }) {
 
 function Timeline() {
   const [selected, setSelected] = useState(0)
+  // Making a plan for another region is not built yet: the button only
+  // shows that it has started.
+  const [creating, setCreating] = useState(false)
   const phase = PHASES[selected]
 
   return (
@@ -371,6 +375,26 @@ function Timeline() {
         Em cinco fases, a equipa testa se falar mais cedo com quem tem contrato
         temporário ajuda a manter o emprego.
       </p>
+      <button
+        type="button"
+        onClick={() => setCreating(true)}
+        disabled={creating}
+        aria-busy={creating || undefined}
+        className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 font-semibold text-primary-foreground transition-[opacity,scale] hover:opacity-90 active:scale-[0.97] disabled:cursor-progress disabled:opacity-80 print:hidden"
+      >
+        {creating ? (
+          <Spinner
+            label="A criar novo plano de ação…"
+            showLabel
+            className="text-primary-foreground"
+          />
+        ) : (
+          <>
+            <Plus weight="bold" className="size-4" aria-hidden="true" />
+            Criar novo plano de ação
+          </>
+        )}
+      </button>
       <ol className="mt-6 grid grid-cols-2 gap-2 border-t pt-3 sm:grid-cols-5">
         {PHASES.map((p, i) => (
           <li key={p.title}>
@@ -439,7 +463,7 @@ function Calculator({ pilot }: { pilot: Pilot }) {
       <div className="mt-6 grid gap-8 lg:grid-cols-2">
         <div className="space-y-6">
           <label className="block">
-            <span className="text-sm text-muted-foreground">Entidade</span>
+            <span className="text-sm text-muted-foreground">Região</span>
             <select
               value={entity}
               onChange={(ev) => setEntity(ev.target.value as EntityId)}
@@ -447,7 +471,7 @@ function Calculator({ pilot }: { pilot: Pilot }) {
             >
               {pilot.entities.map((x) => (
                 <option key={x.id} value={x.id}>
-                  {x.id} {PLACES[x.id].name}
+                  {PLACES[x.id].name}
                 </option>
               ))}
             </select>
@@ -468,7 +492,7 @@ function Calculator({ pilot }: { pilot: Pilot }) {
             />
           </label>
           <p className="text-sm text-muted-foreground">
-            Hoje, nesta entidade, {integer(e.stayed)} de {integer(e.observed)}{" "}
+            Hoje, nesta região, {integer(e.stayed)} de {integer(e.observed)}{" "}
             temporários duram 6 meses (
             <b className="text-foreground">{percent(today)}</b>
             ). O piloto quer chegar a{" "}
@@ -515,7 +539,7 @@ function OtherEntities({ pilot }: { pilot: Pilot }) {
       <table className="w-full min-w-[26rem] text-sm">
         <thead>
           <tr className="border-b border-foreground/60 text-muted-foreground">
-            <th className="py-2 text-start font-medium">Entidade</th>
+            <th className="py-2 text-start font-medium">Região</th>
             <th className="py-2 text-end font-medium">Temporários</th>
             <th className="py-2 text-end font-medium">Por mês</th>
             <th className="py-2 text-end font-medium">Meses de piloto*</th>

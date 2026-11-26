@@ -8,10 +8,14 @@ function ThemeProvider({
   ...props
 }: React.ComponentProps<typeof NextThemesProvider>) {
   return (
+    // Light is the site's look: it opens light on every device, whatever
+    // the phone or computer is set to. Dark only when the person asks for it.
+    // A new storage key so choices saved under the old system default reset.
     <NextThemesProvider
       attribute="class"
-      defaultTheme="system"
-      enableSystem
+      defaultTheme="light"
+      enableSystem={false}
+      storageKey="rj-theme"
       disableTransitionOnChange
       {...props}
     >

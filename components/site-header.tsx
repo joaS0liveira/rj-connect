@@ -1,59 +1,5 @@
 "use client"
 
-import Link from "next/link"
-import { usePathname } from "next/navigation"
-import { ThemeToggle } from "@/components/fica/theme-toggle"
-import { Logo } from "@/components/logo"
-
-const PAGES = [
-  { href: "/", label: "Mapa" },
-  { href: "/painel", label: "Painel" },
-  { href: "/integrar", label: "Integrar+" },
-  { href: "/plano-de-acao", label: "Plano" },
-]
-
-export function SiteHeader() {
-  const pathname = usePathname()
-  return (
-    <header className="flex flex-wrap items-center gap-x-5 gap-y-1 border-b pb-3 sm:gap-x-8 print:hidden">
-      <Link
-        href="/"
-        aria-label="RJ.connect, página inicial"
-        className="inline-flex items-center gap-1"
-      >
-        <Logo />
-        <span aria-hidden="true" className="text-2xl font-bold tracking-tight">
-          <span className="text-highlight">.</span>connect
-        </span>
-      </Link>
-      <nav
-        aria-label="Páginas"
-        className="order-last flex w-full gap-5 sm:order-none sm:w-auto sm:gap-6"
-      >
-        {PAGES.map((p) => (
-          <Link
-            key={p.href}
-            href={p.href}
-            aria-current={pathname === p.href ? "page" : undefined}
-            className="relative inline-flex min-h-11 items-center text-sm font-semibold tracking-wide text-muted-foreground uppercase transition-colors after:absolute after:inset-x-0 after:-bottom-3 after:h-[3px] after:bg-highlight after:opacity-0 hover:text-foreground aria-[current]:text-foreground aria-[current]:after:opacity-100"
-          >
-            {p.label}
-          </Link>
-        ))}
-      </nav>
-      <div className="ms-auto flex items-center gap-3">
-        <span className="hidden text-xs text-muted-foreground tabular-nums sm:inline">
-          Dados atualizados a 31/12/2025
-        </span>
-        <ThemeToggle
-          compact
-          className="size-11 justify-center rounded-full px-0"
-        />
-      </div>
-    </header>
-  )
-}
-
 /** The opening of a page, set like a newspaper feature. */
 export function PageTitle({
   title,

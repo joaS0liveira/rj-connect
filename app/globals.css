@@ -439,6 +439,17 @@ h1 {
       transparent 67%
     );
   }
+  /* The content beside the sidebar: keeps the corner stripe from widening
+     the page now that the page is no longer centred in the window. */
+  .rj-shell {
+    overflow-x: clip;
+  }
+  /* Room at the bottom on a phone for the tab bar. */
+  @media (max-width: 1023px) {
+    .rj-shell {
+      padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+    }
+  }
   body:has(.rj-page) {
     overflow-x: clip;
   }

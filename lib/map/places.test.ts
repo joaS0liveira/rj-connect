@@ -6,7 +6,7 @@ import { daysBetween, REFERENCE_DATE } from "../fica/dates.ts"
 import { toObservedJobs } from "../fica/retention.ts"
 import type * as T from "../fica/types.ts"
 import { ALL, ENTITY_IDS as ids, PLACES } from "./places.ts"
-import { SHAPES } from "./shapes.ts"
+import { GROUP_OUTLINES, SHAPES } from "./shapes.ts"
 
 const load = <Row>(name: string): Row[] =>
   JSON.parse(
@@ -79,6 +79,7 @@ test("all regions together", () => {
   assert.ok(lisbon.length > exits.length / 2)
 })
 
-test("every region but the islands has a shape", () => {
-  assert.deepEqual([...SHAPES.map((s) => s.id), "E08"], ids)
+test("every region but the islands has a shape or is a group of shapes", () => {
+  const drawn = [...SHAPES.map((s) => s.id), ...Object.keys(GROUP_OUTLINES)]
+  assert.deepEqual(new Set([...drawn, "E08"]), new Set(ids))
 })

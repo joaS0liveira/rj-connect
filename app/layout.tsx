@@ -1,9 +1,10 @@
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { Barlow, Barlow_Condensed } from "next/font/google"
 
 import "./globals.css"
 import Script from "next/script"
 import { IntroSplash } from "@/components/intro-splash"
+import { SiteSidebar } from "@/components/site-sidebar"
 import { ThemeProvider } from "@/components/theme-provider"
 import { cn } from "@/lib/utils"
 
@@ -24,6 +25,16 @@ export const metadata: Metadata = {
     "Da colocação à permanência: onde o emprego é mais estável, onde se perde e quando agir.",
 }
 
+// "only light" stops phone browsers (Chrome's auto dark, Samsung Internet)
+// from darkening the light pages on their own. Choosing dark in the app
+// still works: it sets the colour scheme on the page itself.
+export const viewport: Viewport = {
+  colorScheme: "only light",
+  // Lets the bottom tab bar sit above the iPhone home indicator.
+  viewportFit: "cover",
+  themeColor: "#f6f9fa",
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -42,7 +53,10 @@ export default function RootLayout({
         </Script>
         <ThemeProvider>
           <IntroSplash />
-          {children}
+          <div className="lg:flex">
+            <SiteSidebar />
+            <div className="rj-shell min-w-0 flex-1">{children}</div>
+          </div>
         </ThemeProvider>
       </body>
     </html>

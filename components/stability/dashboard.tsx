@@ -11,7 +11,7 @@ import {
 import { useMemo, useState } from "react"
 import { NoData, StackBar, Swatch } from "@/components/map/charts"
 import { Segmented } from "@/components/map/filters"
-import { PageTitle, SiteFooter, SiteHeader } from "@/components/site-header"
+import { PageTitle, SiteFooter } from "@/components/site-header"
 import { integer, percent } from "@/lib/fica/format"
 import {
   clearlyDifferent,
@@ -72,31 +72,32 @@ export function Dashboard({ stability }: { stability: Stability }) {
 
   return (
     <div className="rj-page rj-report mx-auto max-w-7xl px-4 py-4 sm:px-8 sm:py-6">
-      <SiteHeader />
       <main>
         <PageTitle
           title="Quem continua no emprego?"
-          lead="Compara entidades, empresas e contratos. Cada percentagem conta apenas as colocações que já puderam ser observadas durante o prazo escolhido."
+          lead="Compara regiões, empresas e contratos. Cada percentagem conta apenas as colocações que já puderam ser observadas durante o prazo escolhido."
         />
 
         <div className="z-10 -mx-1 mt-4 flex flex-wrap items-end gap-3 bg-background px-1 py-2 md:sticky md:top-0">
           <Picker
-            label="Entidade"
+            label="Região"
             value={filter.entity}
             onChange={(entity) => change({ entity })}
             options={stability.entities.map((e) => ({
               value: e.id,
-              label: `${e.id} ${entityName(e.id)}`,
+              label: entityName(e.id),
             }))}
           />
           <Picker
             label="Empresa"
             value={filter.company}
             onChange={(company) => change({ company })}
-            options={stability.companies.map((c) => ({
-              value: c.id,
-              label: c.name,
-            }))}
+            options={stability.companies
+              .filter((c) => c.known)
+              .map((c) => ({
+                value: c.id,
+                label: c.name,
+              }))}
           />
           <Segmented
             label="Tipo de contrato"
@@ -200,7 +201,7 @@ export function Dashboard({ stability }: { stability: Stability }) {
                 <Segmented
                   label="Comparar por"
                   options={[
-                    { value: "entity", label: "Entidades" },
+                    { value: "entity", label: "Regiões" },
                     { value: "company", label: "Empresas" },
                   ]}
                   value={ranking}
@@ -210,7 +211,7 @@ export function Dashboard({ stability }: { stability: Stability }) {
               {ranking === "entity" ? (
                 <Ranking
                   key="entities"
-                  hint="Clica numa entidade para filtrar."
+                  hint="Clica numa região para filtrar."
                   months={months}
                   rows={stability.entities.map((e) => {
                     const t = totals(
@@ -231,24 +232,25 @@ export function Dashboard({ stability }: { stability: Stability }) {
               ) : (
                 <Ranking
                   key="companies"
-                  hint="A marca mostra o esperado pelas entidades e contratos com que trabalha."
+                  hint="A marca mostra o esperado pelas regiões e contratos com que trabalha."
                   months={months}
-                  rows={stability.companies.map((c) => {
-                    const base = select(stability.cells, {
-                      ...filter,
-                      company: ANY,
-                    })
-                    const e = expectedFor(base, c.id, months)
-                    return {
-                      id: c.id,
-                      label: c.name,
-                      eligible: e.eligible,
-                      stayed: Math.round(e.rate * e.eligible),
-                      expected: e.expectedRate,
-                      verdict: e.verdict,
-                      unknown: !c.known,
-                    }
-                  })}
+                  rows={stability.companies
+                    .filter((c) => c.known)
+                    .map((c) => {
+                      const base = select(stability.cells, {
+                        ...filter,
+                        company: ANY,
+                      })
+                      const e = expectedFor(base, c.id, months)
+                      return {
+                        id: c.id,
+                        label: c.name,
+                        eligible: e.eligible,
+                        stayed: Math.round(e.rate * e.eligible),
+                        expected: e.expectedRate,
+                        verdict: e.verdict,
+                      }
+                    })}
                   selected={filter.company}
                   onSelect={(company) =>
                     change({
@@ -419,7 +421,15 @@ function Ranking({
     .sort((a, b) => b.stayed / b.eligible - a.stayed / a.eligible)
   const hidden = rows.length - available.length
   const anyClear = sorted.some((r) => r.verdict && r.verdict !== "within")
-  const limit = 4
+  const limit = 8
+  const all = sorted.reduce(
+    (t, r) => ({
+      stayed: t.stayed + r.stayed,
+      eligible: t.eligible + r.eligible,
+    }),
+    { stayed: 0, eligible: 0 }
+  )
+  const average = all.eligible ? all.stayed / all.eligible : 0
   const visible = expanded ? sorted : sorted.slice(0, limit)
   const selectedRow = sorted.find((row) => row.id === selected)
   const shown =
@@ -437,32 +447,43 @@ function Ranking({
       ) : (
         <>
           <p className="text-sm text-muted-foreground">
-            Aos {months} meses. {hint}
+            Em cada 100 pessoas colocadas, quantas ainda estavam no emprego aos{" "}
+            {months} meses. {hint}
           </p>
-          <div
-            aria-hidden="true"
-            className="mt-5 hidden grid-cols-[minmax(0,10rem)_minmax(0,1fr)_5rem] items-end gap-5 px-3 text-[11px] text-muted-foreground sm:grid"
-          >
-            <span />
-            <span className="flex justify-between">
-              <span>0%</span>
-              <span>50%</span>
-              <span>100%</span>
+          <p className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-2.5 rounded-sm bg-[var(--rj-stay)]" />
+              Acima da média
             </span>
-            <span className="text-end">Ficaram</span>
-          </div>
-          <ol className="mt-1 divide-y divide-border/60">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="size-2.5 rounded-sm bg-[var(--rj-leave)]" />
+              Abaixo da média
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="h-3 border-s-2 border-dashed border-foreground" />
+              Média: {percent(average)}
+            </span>
+            {sorted.some((r) => r.expected !== undefined) && (
+              <span className="inline-flex items-center gap-1.5">
+                <span className="h-3 w-1 rounded-full bg-foreground/60" />
+                Esperado
+              </span>
+            )}
+          </p>
+          <ol className="mt-3 space-y-1">
             {shown.map((r) => {
               const rate = r.stayed / r.eligible
+              const up = rate >= average
               return (
                 <li key={r.id}>
                   <button
                     type="button"
                     aria-pressed={selected === r.id}
+                    aria-label={`${r.label}: ${percent(rate)} ficaram, ${integer(r.stayed)} de ${integer(r.eligible)}, ${up ? "acima" : "abaixo"} da média`}
                     onClick={() => onSelect(r.id)}
-                    className="grid min-h-13 w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 rounded-lg px-3 py-3 text-start hover:bg-muted/60 aria-pressed:bg-accent sm:grid-cols-[minmax(0,10rem)_minmax(0,1fr)_5rem] sm:gap-x-5"
+                    className="grid w-full grid-cols-[minmax(0,7.5rem)_minmax(0,1fr)_4.5rem] items-center gap-x-3 rounded-lg px-2 py-2 text-start hover:bg-muted/60 aria-pressed:bg-accent sm:grid-cols-[minmax(0,10rem)_minmax(0,1fr)_5.5rem]"
                   >
-                    <span className="min-w-0 text-sm font-medium">
+                    <span className="min-w-0 truncate text-sm font-medium">
                       {r.label}
                       {r.verdict && r.verdict !== "within" && (
                         <span className="block text-xs font-normal text-muted-foreground">
@@ -474,25 +495,30 @@ function Ranking({
                     </span>
                     <span
                       aria-hidden="true"
-                      className="relative order-last col-span-2 mx-1.5 block h-px bg-border sm:order-none sm:col-span-1"
+                      className="relative block h-5 rounded-md bg-muted"
                     >
-                      <span className="absolute -inset-y-1 start-1/2 w-px bg-border" />
                       <span
-                        className="absolute top-1/2 z-10 size-2.5 -translate-y-1/2 rounded-full bg-primary ring-2 ring-card motion-safe:animate-[chart-point-in_350ms_ease-out_both] motion-safe:transition-[inset-inline-start] motion-safe:duration-500 ltr:-translate-x-1/2 rtl:translate-x-1/2"
+                        className="absolute inset-y-0 start-0 rounded-md motion-safe:transition-[width] motion-safe:duration-500"
                         style={{
-                          insetInlineStart: `${rate * 100}%`,
+                          width: `${rate * 100}%`,
+                          background: up ? "var(--rj-stay)" : "var(--rj-leave)",
                         }}
                       />
                       {r.expected !== undefined && r.eligible > 0 && (
                         <span
-                          aria-hidden="true"
-                          className="absolute top-1/2 size-3.5 -translate-y-1/2 rotate-45 border border-muted-foreground bg-card motion-safe:transition-[inset-inline-start] motion-safe:duration-500 ltr:-translate-x-1/2 rtl:translate-x-1/2"
+                          className="absolute -inset-y-1 w-1 -translate-x-1/2 rounded-full bg-foreground/60 rtl:translate-x-1/2"
                           style={{ insetInlineStart: `${r.expected * 100}%` }}
                         />
                       )}
+                      <span
+                        className="absolute -inset-y-1.5 border-s-2 border-dashed border-foreground"
+                        style={{ insetInlineStart: `${average * 100}%` }}
+                      />
                     </span>
                     <span className="text-end tabular-nums">
-                      <strong className="block text-sm">{percent(rate)}</strong>
+                      <strong className="block text-base leading-tight">
+                        {percent(rate)}
+                      </strong>
                       <span className="block text-[11px] text-muted-foreground">
                         {integer(r.stayed)} de {integer(r.eligible)}
                       </span>
@@ -553,7 +579,7 @@ function Ranking({
         !anyClear && (
           <p className="mt-3 text-sm font-medium">
             Nenhuma empresa se afasta claramente do esperado: as diferenças vêm
-            sobretudo das entidades e dos contratos.
+            sobretudo das regiões e dos contratos.
           </p>
         )}
     </div>

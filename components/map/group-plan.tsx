@@ -1,6 +1,7 @@
 "use client"
 
 import {
+  CaretDown,
   CheckCircle,
   CalendarPlus,
   Copy,
@@ -387,97 +388,103 @@ export function GroupPlan({
                   <p className="text-sm text-muted-foreground">
                     {integer(g.temporary)} com contrato temporário
                   </p>
-                  <fieldset className="mt-3">
-                    <legend className="text-sm font-semibold">
-                      Primeiro passo para todo o grupo
-                    </legend>
-                    <div className="mt-2 grid gap-2">
-                      {c.options.map((o, i) => {
-                        const on = i === choice
-                        return (
-                          <label
-                            key={o.title}
-                            className={cn(
-                              "flex cursor-pointer items-start gap-3 rounded-xl border p-3 transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
-                              on
-                                ? "border-foreground bg-foreground text-background"
-                                : "border-foreground/15 hover:border-foreground/40"
-                            )}
-                          >
-                            <input
-                              type="radio"
-                              name={`step-${g.caseId}`}
-                              value={i}
-                              checked={on}
-                              onChange={() =>
-                                setChoices({ ...choices, [g.caseId]: i })
-                              }
-                              className="sr-only"
-                            />
-                            <span
-                              aria-hidden="true"
+                  <div className="mt-3 rounded-xl bg-foreground p-3 text-background">
+                    <p className="text-xs font-semibold tracking-wide text-background/70 uppercase">
+                      Primeiro passo
+                    </p>
+                    <p className="font-semibold">{c.options[choice].title}</p>
+                    <p className="text-sm text-background/75">
+                      {c.options[choice].step}
+                    </p>
+                  </div>
+                  <details className="group mt-3 border-t pt-1">
+                    <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-2 text-sm font-semibold [&::-webkit-details-marker]:hidden">
+                      Mais detalhes
+                      <CaretDown
+                        aria-hidden="true"
+                        className="transition-transform group-open:rotate-180 motion-reduce:transition-none"
+                      />
+                    </summary>
+                    <fieldset className="mt-1">
+                      <legend className="text-sm font-semibold">
+                        Escolher outro passo
+                      </legend>
+                      <div className="mt-2 grid gap-1.5">
+                        {c.options.map((o, i) => {
+                          const on = i === choice
+                          return (
+                            <label
+                              key={o.title}
                               className={cn(
-                                "mt-0.5 grid size-5 flex-none place-items-center rounded-full border-2",
+                                "flex cursor-pointer items-center gap-3 rounded-lg border px-3 py-2 text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring",
                                 on
-                                  ? "border-background"
-                                  : "border-foreground/30"
+                                  ? "border-foreground bg-foreground text-background"
+                                  : "border-foreground/15 hover:border-foreground/40"
                               )}
                             >
-                              {on && (
-                                <span className="size-2 rounded-full bg-background" />
-                              )}
-                            </span>
-                            <span className="min-w-0">
-                              <span className="block font-semibold">
-                                {o.title}
-                              </span>
+                              <input
+                                type="radio"
+                                name={`step-${g.caseId}`}
+                                value={i}
+                                checked={on}
+                                onChange={() =>
+                                  setChoices({ ...choices, [g.caseId]: i })
+                                }
+                                className="sr-only"
+                              />
                               <span
+                                aria-hidden="true"
                                 className={cn(
-                                  "block text-sm",
+                                  "grid size-4 flex-none place-items-center rounded-full border-2",
                                   on
-                                    ? "text-background/75"
-                                    : "text-muted-foreground"
+                                    ? "border-background"
+                                    : "border-foreground/30"
                                 )}
                               >
-                                {o.step}
+                                {on && (
+                                  <span className="size-1.5 rounded-full bg-background" />
+                                )}
                               </span>
-                            </span>
-                          </label>
-                        )
-                      })}
-                    </div>
-                  </fieldset>
-                  {g.sectors.length > 0 && (
-                    <div className="mt-3">
-                      <p className="text-sm font-semibold">
-                        Onde já trabalharam
-                      </p>
-                      <p className="mt-1 flex flex-wrap gap-1.5">
-                        {g.sectors.slice(0, 4).map((s) => (
-                          <span
-                            key={s.sector}
-                            className="rounded-full bg-muted px-2.5 py-0.5 text-sm"
-                          >
-                            {SECTORS[s.sector]} · {integer(s.n)}
-                          </span>
-                        ))}
-                      </p>
-                      {top && (
-                        <p className="mt-2 text-sm text-muted-foreground">
-                          Empresas de {SECTORS[top.sector].toLowerCase()}:{" "}
-                          {companiesFor(top.sector, id)
-                            .map(
-                              (x) =>
-                                `${x.name} (${x.zone === ZONE_OF[id] ? "mesma zona" : x.zone})`
-                            )
-                            .join(" · ")}
+                              <span className="min-w-0 font-semibold">
+                                {o.title}
+                              </span>
+                            </label>
+                          )
+                        })}
+                      </div>
+                    </fieldset>
+                    {g.sectors.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-sm font-semibold">
+                          Onde já trabalharam
                         </p>
-                      )}
-                    </div>
-                  )}
-                  <p className="mt-3 border-t pt-2 text-sm">
-                    <b>Para não repetir:</b> {c.avoid}
-                  </p>
+                        <p className="mt-1 flex flex-wrap gap-1.5">
+                          {g.sectors.slice(0, 4).map((s) => (
+                            <span
+                              key={s.sector}
+                              className="rounded-full bg-muted px-2.5 py-0.5 text-sm"
+                            >
+                              {SECTORS[s.sector]} · {integer(s.n)}
+                            </span>
+                          ))}
+                        </p>
+                        {top && (
+                          <p className="mt-2 text-sm text-muted-foreground">
+                            Empresas de {SECTORS[top.sector].toLowerCase()}:{" "}
+                            {companiesFor(top.sector, id)
+                              .map(
+                                (x) =>
+                                  `${x.name} (${x.zone === ZONE_OF[id] ? "mesma zona" : x.zone})`
+                              )
+                              .join(" · ")}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                    <p className="mt-3 text-sm">
+                      <b>Para não repetir:</b> {c.avoid}
+                    </p>
+                  </details>
                 </li>
               )
             })}

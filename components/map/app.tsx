@@ -4,11 +4,12 @@ import { useRef, useState } from "react"
 import { Dashboard, type Choice, type Tab } from "@/components/map/dashboard"
 import { Filters, type FilterState } from "@/components/map/filters"
 import { Overview } from "@/components/map/overview"
-import { PageTitle, SiteFooter, SiteHeader } from "@/components/site-header"
+import { PageTitle, SiteFooter } from "@/components/site-header"
 import { percent } from "@/lib/fica/format"
 import { cellOf, type Analysis } from "@/lib/map/analysis"
-import { ENTITY_IDS, PLACES, type EntityId } from "@/lib/map/places"
-import { MAP_VIEW, SHAPES } from "@/lib/map/shapes"
+import { RegionOptions } from "@/components/map/region-options"
+import { ENTITY_IDS, PLACES, partsOf, type EntityId } from "@/lib/map/places"
+import { GROUP_OUTLINES, MAP_VIEW, SHAPES } from "@/lib/map/shapes"
 import { cn } from "@/lib/utils"
 
 /**
@@ -20,18 +21,26 @@ const LABELS: Record<EntityId, [number, number]> = {
   E05: [139, 109],
   E01: [230, 122],
   E02: [184, 237],
-  E03: [122, 365],
-  E04: [132.5, 439],
-  E06: [200, 373],
+  E03: [83, 384],
+  E04: [64, 497],
+  E06: [190, 425],
   E07: [155.5, 546],
   E08: [298, 521],
 }
 const LABEL_SIZE: Partial<Record<EntityId, { name: number; value: number }>> = {
   E05: { name: 10, value: 11 },
-  E04: { name: 9, value: 10 },
+  E03: { name: 9, value: 10 },
   E07: { name: 10, value: 11 },
 }
 const INLINE: EntityId[] = ["E07"]
+
+/** Sul has no land of its own: a bracket in the sea beside its parts. */
+const SOUTH = { x: 64, top: 436, bottom: 562 }
+
+/** The outline of a region, or of all its parts for a group. */
+const outlineOf = (id: EntityId) =>
+  (GROUP_OUTLINES as Partial<Record<EntityId, string>>)[id] ??
+  SHAPES.find((s) => s.id === id)?.d
 
 /** Drawn as an inset, like on most maps of Portugal. Not to scale. */
 const ISLANDS = [
@@ -98,8 +107,6 @@ export function MapApp({ analysis }: { analysis: Analysis }) {
 
   return (
     <div className="rj-page rj-report mx-auto flex min-h-dvh max-w-7xl flex-col px-4 py-4 sm:px-8 sm:py-6">
-      <SiteHeader />
-
       <main className="flex-1">
         <div className="rj-toolbar">
           <PageTitle title="Permanência no emprego" />
@@ -129,11 +136,7 @@ export function MapApp({ analysis }: { analysis: Analysis }) {
                 onChange={(e) => choose(e.target.value as Choice)}
               >
                 <option value="all">Todas as regiões</option>
-                {ENTITY_IDS.map((id) => (
-                  <option key={id} value={id}>
-                    {PLACES[id].name}
-                  </option>
-                ))}
+                <RegionOptions />
               </select>
             </label>
             {open ? (
@@ -223,8 +226,9 @@ export function PortugalMap({
     onFocus: () => onHover(id),
     onBlur: () => onHover(null),
   })
+  const lit = partsOf(choice)
   const fill = (id: EntityId) =>
-    id === choice ? "var(--rj-turquoise)" : "var(--rj-region)"
+    lit.includes(id) ? "var(--rj-turquoise)" : "var(--rj-region)"
   const label = (id: EntityId) =>
     rates[id] === null ? "—" : percent(rates[id]!)
   const showRate = (id: EntityId) => id === hovered || id === choice
@@ -295,18 +299,30 @@ export function PortugalMap({
             // The chosen region floats: a soft shadow stays on the map and a
             // copy of the region rises above it. Keyed by region, so it lifts
             // again every time the choice changes.
-            const shape = SHAPES.find((s) => s.id === choice)
+            // A group rises as one piece, with its inner borders kept.
+            const outline = choice === "all" ? null : outlineOf(choice)
+            const parts = SHAPES.filter((s) => lit.includes(s.id))
             return (
-              shape && (
-                <g key={shape.id} className="pointer-events-none">
+              outline && (
+                <g key={choice} className="pointer-events-none">
                   <path
-                    d={shape.d}
+                    d={outline}
                     className="rj-lift-shadow fill-foreground/25"
                   />
                   <g className="rj-lift">
+                    {parts.map((s) => (
+                      <path
+                        key={s.id}
+                        d={s.d}
+                        fill={fill(s.id)}
+                        className="stroke-card"
+                        strokeWidth={1.4}
+                        strokeLinejoin="round"
+                      />
+                    ))}
                     <path
-                      d={shape.d}
-                      fill={fill(shape.id)}
+                      d={outline}
+                      fill="none"
                       className="stroke-foreground"
                       strokeWidth={2.8}
                       strokeLinejoin="round"
@@ -316,14 +332,41 @@ export function PortugalMap({
               )
             )
           })()}
-          {hovered && hovered !== choice && (
+          {hovered && hovered !== choice && hovered !== "E08" && (
             <path
-              d={SHAPES.find((s) => s.id === hovered)?.d}
+              d={outlineOf(hovered)}
               className="pointer-events-none fill-none stroke-foreground"
               strokeWidth={1.6}
               strokeLinejoin="round"
             />
           )}
+          <g {...interactive("E04")} className="cursor-pointer outline-none">
+            <path
+              d={`M${SOUTH.x + 8} ${SOUTH.top}H${SOUTH.x}V${SOUTH.bottom}H${SOUTH.x + 8}`}
+              fill="none"
+              strokeWidth={choice === "E04" || hovered === "E04" ? 2 : 1.2}
+              strokeLinecap="round"
+              className={
+                choice === "E04" || hovered === "E04"
+                  ? "stroke-foreground"
+                  : "stroke-foreground/40"
+              }
+            />
+            <rect
+              x={SOUTH.x - 19}
+              y={LABELS.E04[1] - 15}
+              width={38}
+              height={showRate("E04") ? 30 : 20}
+              rx={6}
+              fill={fill("E04")}
+              className={cn(
+                "motion-safe:transition-[fill] motion-safe:duration-500",
+                choice === "E04" || hovered === "E04"
+                  ? "stroke-foreground stroke-2"
+                  : "stroke-card"
+              )}
+            />
+          </g>
           {choice !== "all" && route && (
             <Route from={LABELS[choice]} to={LABELS[route]} />
           )}
@@ -334,14 +377,15 @@ export function PortugalMap({
               y={LABELS[id][1]}
               textAnchor="middle"
               fontSize={LABEL_SIZE[id]?.name ?? 11}
-              fontWeight={choice === id ? 800 : 600}
+              fontWeight={lit.includes(id) ? 800 : 600}
               aria-hidden="true"
               className={cn(
                 "pointer-events-none",
-                choice === id && id !== "E08" && "rj-lift"
+                lit.includes(id) && id !== "E08" && id !== "E04" && "rj-lift"
               )}
               // A halo in the region colour keeps the text clear of borders.
               stroke={id === "E08" ? "var(--background)" : fill(id)}
+              strokeOpacity={id === "E04" ? 0 : 1}
               strokeWidth={3}
               strokeLinejoin="round"
               paintOrder="stroke"
