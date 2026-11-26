@@ -1,63 +1,76 @@
-"use client";
+"use client"
 
-import { CheckCircle, CircleNotch, Info, WarningCircle, X } from "@phosphor-icons/react";
-import { useReducedMotion } from "motion/react";
+import {
+  CheckCircle,
+  CircleNotch,
+  Info,
+  WarningCircle,
+  X,
+} from "@phosphor-icons/react"
+import { useReducedMotion } from "motion/react"
 import {
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
   useSyncExternalStore,
-} from "react";
-import { Button, IconButton } from "@/components/ui/action-button";
-import { CSS_EASE_OUT } from "@/lib/motion-tokens";
-import { cn } from "@/lib/utils";
+} from "react"
+import { Button, IconButton } from "@/components/ui/action-button"
+import { CSS_EASE_OUT } from "@/lib/motion-tokens"
+import { cn } from "@/lib/utils"
 
-export type ToastTone = "default" | "success" | "error" | "loading";
+export type ToastTone = "default" | "success" | "error" | "loading"
 
 export type ToastData = {
-  id: string;
-  title: React.ReactNode;
-  description?: React.ReactNode;
-  tone: ToastTone;
-  action?: { label: string; onClick: () => void };
+  id: string
+  title: React.ReactNode
+  description?: React.ReactNode
+  tone: ToastTone
+  action?: { label: string; onClick: () => void }
   /** ms before it closes on its own; loading toasts wait to be updated. */
-  duration: number;
-  dismissing?: boolean;
-};
+  duration: number
+  dismissing?: boolean
+}
 
-type ToastOptions = Partial<Omit<ToastData, "title" | "tone" | "dismissing">>;
+type ToastOptions = Partial<Omit<ToastData, "title" | "tone" | "dismissing">>
 
 // One module-level store, so `toast()` works from anywhere without context.
-let toasts: ToastData[] = [];
-const listeners = new Set<() => void>();
-const emit = () => listeners.forEach((listener) => listener());
-const EMPTY: ToastData[] = [];
-let counter = 0;
+let toasts: ToastData[] = []
+const listeners = new Set<() => void>()
+const emit = () => listeners.forEach((listener) => listener())
+const EMPTY: ToastData[] = []
+let counter = 0
 
-function upsert(title: React.ReactNode, tone: ToastTone, options: ToastOptions = {}) {
-  const id = options.id ?? `toast-${++counter}`;
-  const next: ToastData = { duration: 4000, ...options, id, title, tone };
+function upsert(
+  title: React.ReactNode,
+  tone: ToastTone,
+  options: ToastOptions = {}
+) {
+  const id = options.id ?? `toast-${++counter}`
+  const next: ToastData = { duration: 4000, ...options, id, title, tone }
   toasts = toasts.some((t) => t.id === id)
-    ? toasts.map((t) => (t.id === id ? { ...t, ...next, dismissing: false } : t))
-    : [next, ...toasts];
-  emit();
-  return id;
+    ? toasts.map((t) =>
+        t.id === id ? { ...t, ...next, dismissing: false } : t
+      )
+    : [next, ...toasts]
+  emit()
+  return id
 }
 
 function dismiss(id: string) {
-  toasts = toasts.map((t) => (t.id === id ? { ...t, dismissing: true } : t));
-  emit();
+  toasts = toasts.map((t) => (t.id === id ? { ...t, dismissing: true } : t))
+  emit()
   // Remove after the exit transition.
   setTimeout(() => {
-    toasts = toasts.filter((t) => t.id !== id);
-    emit();
-  }, 200);
+    toasts = toasts.filter((t) => t.id !== id)
+    emit()
+  }, 200)
 }
 
 /** Shows a toast. Pass `id` to update an existing one in place. */
 export const toast = Object.assign(
-  (title: React.ReactNode, options?: ToastOptions) => upsert(title, "default", options),
+  (title: React.ReactNode, options?: ToastOptions) =>
+    upsert(title, "default", options),
   {
     success: (title: React.ReactNode, options?: ToastOptions) =>
       upsert(title, "success", options),
@@ -69,21 +82,21 @@ export const toast = Object.assign(
     promise<T>(
       promise: Promise<T>,
       messages: {
-        loading: React.ReactNode;
-        success: React.ReactNode;
-        error: React.ReactNode;
-      },
+        loading: React.ReactNode
+        success: React.ReactNode
+        error: React.ReactNode
+      }
     ) {
-      const id = upsert(messages.loading, "loading", { duration: Infinity });
+      const id = upsert(messages.loading, "loading", { duration: Infinity })
       promise.then(
         () => upsert(messages.success, "success", { id, duration: 4000 }),
-        () => upsert(messages.error, "error", { id, duration: 6000 }),
-      );
-      return promise;
+        () => upsert(messages.error, "error", { id, duration: 6000 })
+      )
+      return promise
     },
     dismiss,
-  },
-);
+  }
+)
 
 const tones: Record<ToastTone, { icon: typeof Info; className: string }> = {
   default: { icon: Info, className: "text-muted-foreground" },
@@ -93,33 +106,33 @@ const tones: Record<ToastTone, { icon: typeof Info; className: string }> = {
     icon: CircleNotch,
     className: "animate-spin text-brand motion-reduce:animate-none",
   },
-};
+}
 
-const GAP = 8;
+const GAP = 8
 
 export type ToasterLabels = {
   /** Name of the notifications region. */
-  region: string;
+  region: string
   /** Announced for a toast whose title isn't plain text. */
-  fallback: string;
-  dismiss: string;
-};
+  fallback: string
+  dismiss: string
+}
 
 const defaultLabels: ToasterLabels = {
   region: "Notifications",
   fallback: "Notification",
   dismiss: "Dismiss",
-};
+}
 
 export type ToasterProps = {
   /** Toasts visible in the collapsed stack; older ones wait behind. */
-  visible?: number;
+  visible?: number
   /** `bottom-end` is the bottom right, or the bottom left under dir="rtl". */
-  position?: "bottom-end" | "bottom-right" | "bottom-center";
+  position?: "bottom-end" | "bottom-right" | "bottom-center"
   /** UI strings, for translating. */
-  labels?: Partial<ToasterLabels>;
-  className?: string;
-};
+  labels?: Partial<ToasterLabels>
+  className?: string
+}
 
 /** Mount once near the root. Toasts stack, fan out on hover and pause while you read. */
 export function Toaster({
@@ -128,28 +141,28 @@ export function Toaster({
   labels: labelOverrides,
   className,
 }: ToasterProps) {
-  const labels = { ...defaultLabels, ...labelOverrides };
+  const labels = { ...defaultLabels, ...labelOverrides }
   const items = useSyncExternalStore(
     (listener) => {
-      listeners.add(listener);
-      return () => listeners.delete(listener);
+      listeners.add(listener)
+      return () => listeners.delete(listener)
     },
     () => toasts,
-    () => EMPTY,
-  );
-  const [expanded, setExpanded] = useState(false);
-  const [hidden, setHidden] = useState(false);
-  const [heights, setHeights] = useState<Record<string, number>>({});
+    () => EMPTY
+  )
+  const [expanded, setExpanded] = useState(false)
+  const [hidden, setHidden] = useState(false)
+  const [heights, setHeights] = useState<Record<string, number>>({})
 
   // Timers pause while the tab is in the background.
   useEffect(() => {
-    const onChange = () => setHidden(document.hidden);
-    document.addEventListener("visibilitychange", onChange);
-    return () => document.removeEventListener("visibilitychange", onChange);
-  }, []);
+    const onChange = () => setHidden(document.hidden)
+    document.addEventListener("visibilitychange", onChange)
+    return () => document.removeEventListener("visibilitychange", onChange)
+  }, [])
 
-  const live = items.filter((t) => !t.dismissing);
-  const frontHeight = heights[live[0]?.id] ?? 0;
+  const live = items.filter((t) => !t.dismissing)
+  const frontHeight = heights[live[0]?.id] ?? 0
 
   return (
     <section
@@ -161,7 +174,7 @@ export function Toaster({
           : position === "bottom-right"
             ? "right-4"
             : "end-4",
-        className,
+        className
       )}
     >
       <ol
@@ -171,15 +184,16 @@ export function Toaster({
         onPointerLeave={() => setExpanded(false)}
         onFocus={() => setExpanded(true)}
         onBlur={(event) => {
-          if (!event.currentTarget.contains(event.relatedTarget)) setExpanded(false);
+          if (!event.currentTarget.contains(event.relatedTarget))
+            setExpanded(false)
         }}
       >
         {items.map((item) => {
-          const index = live.indexOf(item);
+          const index = live.indexOf(item)
           // Expanded: each toast sits above the newer ones. Collapsed: peeking behind the front one.
           const offset = live
             .slice(0, Math.max(index, 0))
-            .reduce((sum, t) => sum + (heights[t.id] ?? 0) + GAP, 0);
+            .reduce((sum, t) => sum + (heights[t.id] ?? 0) + GAP, 0)
           return (
             <ToastItem
               key={item.id}
@@ -192,11 +206,13 @@ export function Toaster({
               dismissLabel={labels.dismiss}
               onHeight={(h) =>
                 setHeights((current) =>
-                  current[item.id] === h ? current : { ...current, [item.id]: h },
+                  current[item.id] === h
+                    ? current
+                    : { ...current, [item.id]: h }
                 )
               }
             />
-          );
+          )
         })}
       </ol>
       <p role="status" aria-live="polite" className="sr-only">
@@ -205,7 +221,7 @@ export function Toaster({
           : ""}
       </p>
     </section>
-  );
+  )
 }
 
 function ToastItem({
@@ -218,63 +234,65 @@ function ToastItem({
   dismissLabel,
   onHeight,
 }: {
-  item: ToastData;
-  index: number;
-  expanded: boolean;
-  offset: number;
-  hiddenBehind: boolean;
-  paused: boolean;
-  dismissLabel: string;
-  onHeight: (height: number) => void;
+  item: ToastData
+  index: number
+  expanded: boolean
+  offset: number
+  hiddenBehind: boolean
+  paused: boolean
+  dismissLabel: string
+  onHeight: (height: number) => void
 }) {
-  const reduce = useReducedMotion();
-  const ref = useRef<HTMLLIElement>(null);
-  const [mounted, setMounted] = useState(false);
-  const [drag, setDrag] = useState<{ y: number; startY: number; at: number } | null>(
-    null,
-  );
-  const remaining = useRef(item.duration);
+  const reduce = useReducedMotion()
+  const ref = useRef<HTMLLIElement>(null)
+  const [mounted, setMounted] = useState(false)
+  const [drag, setDrag] = useState<{
+    y: number
+    startY: number
+    at: number
+  } | null>(null)
+  const remaining = useRef(item.duration)
 
   // Measure for the expanded layout.
   useLayoutEffect(() => {
-    const node = ref.current;
-    if (!node) return;
-    const observer = new ResizeObserver(() => onHeight(node.offsetHeight));
-    observer.observe(node);
-    return () => observer.disconnect();
-  }, [onHeight]);
+    const node = ref.current
+    if (!node) return
+    const observer = new ResizeObserver(() => onHeight(node.offsetHeight))
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [onHeight])
 
   // Enter on the next frame so the start position gets painted first.
   useEffect(() => {
-    const frame = requestAnimationFrame(() => setMounted(true));
-    return () => cancelAnimationFrame(frame);
-  }, []);
+    const frame = requestAnimationFrame(() => setMounted(true))
+    return () => cancelAnimationFrame(frame)
+  }, [])
 
   // Reset the countdown when the toast is updated (e.g. a promise settled).
   useEffect(() => {
-    remaining.current = item.duration;
-  }, [item.duration, item.tone]);
+    remaining.current = item.duration
+  }, [item.duration, item.tone])
 
   useEffect(() => {
-    if (paused || item.dismissing || !Number.isFinite(remaining.current)) return;
-    const start = Date.now();
-    const timer = setTimeout(() => dismiss(item.id), remaining.current);
+    if (paused || item.dismissing || !Number.isFinite(remaining.current)) return
+    const start = Date.now()
+    const timer = setTimeout(() => dismiss(item.id), remaining.current)
     return () => {
-      clearTimeout(timer);
-      remaining.current -= Date.now() - start;
-    };
-  }, [paused, item.dismissing, item.id, item.duration, item.tone]);
+      clearTimeout(timer)
+      remaining.current -= Date.now() - start
+    }
+  }, [paused, item.dismissing, item.id, item.duration, item.tone])
 
-  const front = index === 0;
-  const dragY = drag?.y ?? 0;
+  const front = index === 0
+  const dragY = drag?.y ?? 0
   const y = item.dismissing
     ? 0
     : expanded
       ? -offset + dragY
-      : -Math.max(index, 0) * 10 + dragY;
-  const scale = expanded || item.dismissing ? 1 : 1 - Math.max(index, 0) * 0.05;
-  const shown = mounted && !item.dismissing && !hiddenBehind;
-  const { icon: ToneIcon, className: toneClass } = tones[item.tone];
+      : -Math.max(index, 0) * 10 + dragY
+  const scale = expanded || item.dismissing ? 1 : 1 - Math.max(index, 0) * 0.05
+  const shown = mounted && !item.dismissing && !hiddenBehind
+  const { icon: ToneIcon, className: toneClass } = tones[item.tone]
 
   return (
     <li
@@ -294,28 +312,28 @@ function ToastItem({
         pointerEvents: hiddenBehind ? "none" : undefined,
       }}
       onPointerDown={(event) => {
-        if (!front && !expanded) return;
-        if ((event.target as HTMLElement).closest("button")) return;
-        event.currentTarget.setPointerCapture(event.pointerId);
-        setDrag({ y: 0, startY: event.clientY, at: Date.now() });
+        if (!front && !expanded) return
+        if ((event.target as HTMLElement).closest("button")) return
+        event.currentTarget.setPointerCapture(event.pointerId)
+        setDrag({ y: 0, startY: event.clientY, at: Date.now() })
       }}
       onPointerMove={(event) => {
-        if (!drag) return;
-        const delta = event.clientY - drag.startY;
+        if (!drag) return
+        const delta = event.clientY - drag.startY
         // Downward follows the finger; upward meets friction.
-        setDrag({ ...drag, y: delta > 0 ? delta : delta * 0.15 });
+        setDrag({ ...drag, y: delta > 0 ? delta : delta * 0.15 })
       }}
       onPointerUp={() => {
-        if (!drag) return;
-        const velocity = Math.abs(drag.y) / Math.max(Date.now() - drag.at, 1);
-        setDrag(null);
-        if (drag.y > 45 || (drag.y > 0 && velocity > 0.11)) dismiss(item.id);
+        if (!drag) return
+        const velocity = Math.abs(drag.y) / Math.max(Date.now() - drag.at, 1)
+        setDrag(null)
+        if (drag.y > 45 || (drag.y > 0 && velocity > 0.11)) dismiss(item.id)
       }}
     >
       <div
         className={cn(
           "group flex items-start gap-3 rounded-2xl bg-surface-inset p-3 text-foreground shadow-[0_12px_32px_-12px_rgb(0_0_0/0.3)] dark:bg-surface-raised dark:shadow-[0_16px_40px_-12px_rgb(0_0_0/0.7)]",
-          !front && !expanded && "[&>*]:opacity-0",
+          !front && !expanded && "[&>*]:opacity-0"
         )}
       >
         <ToneIcon
@@ -336,8 +354,8 @@ function ToastItem({
             size="sm"
             className="-my-1 h-7 px-3"
             onClick={() => {
-              item.action?.onClick();
-              dismiss(item.id);
+              item.action?.onClick()
+              dismiss(item.id)
             }}
           >
             {item.action.label}
@@ -352,5 +370,5 @@ function ToastItem({
         />
       </div>
     </li>
-  );
+  )
 }

@@ -1,52 +1,52 @@
-"use client";
+"use client"
 
-import { FileArrowUp, WarningCircle } from "@phosphor-icons/react";
-import { AnimatePresence, MotionConfig, motion } from "motion/react";
-import { useId, useRef, useState } from "react";
-import { Button } from "@/components/ui/action-button";
-import { EASE_OUT } from "@/lib/motion-tokens";
-import { cn } from "@/lib/utils";
+import { FileArrowUp, WarningCircle } from "@phosphor-icons/react"
+import { AnimatePresence, MotionConfig, motion } from "motion/react"
+import { useId, useRef, useState } from "react"
+import { Button } from "@/components/ui/action-button"
+import { EASE_OUT } from "@/lib/motion-tokens"
+import { cn } from "@/lib/utils"
 
-export type RejectedFile = { file: File; reason: string };
+export type RejectedFile = { file: File; reason: string }
 
 export type FileRules = {
   /** MIME types or extensions, like the input's accept: "image/*,.pdf,.csv". */
-  accept?: string;
+  accept?: string
   /** Bytes. */
-  maxSize?: number;
-  multiple?: boolean;
+  maxSize?: number
+  multiple?: boolean
   /** Most files in one drop. */
-  maxFiles?: number;
-};
+  maxFiles?: number
+}
 
 const formatBytes = (n: number) =>
   n < 1024
     ? `${n} B`
     : n < 1024 ** 2
       ? `${Math.round(n / 1024)} KB`
-      : `${(n / 1024 ** 2).toFixed(1)} MB`;
+      : `${(n / 1024 ** 2).toFixed(1)} MB`
 
 function matches(file: File, accept?: string) {
-  if (!accept) return true;
+  if (!accept) return true
   return accept.split(",").some((rule) => {
-    const r = rule.trim().toLowerCase();
-    if (r.startsWith(".")) return file.name.toLowerCase().endsWith(r);
-    if (r.endsWith("/*")) return file.type.startsWith(r.slice(0, -1));
-    return file.type === r;
-  });
+    const r = rule.trim().toLowerCase()
+    if (r.startsWith(".")) return file.name.toLowerCase().endsWith(r)
+    if (r.endsWith("/*")) return file.type.startsWith(r.slice(0, -1))
+    return file.type === r
+  })
 }
 
 export type DropZoneLabels = {
-  release: string;
-  browse: string;
+  release: string
+  browse: string
   /** Rejection reasons. Sizes come formatted, e.g. "10.0 MB". */
-  unsupported: string;
-  tooLarge: (max: string) => string;
-  tooMany: string;
+  unsupported: string
+  tooLarge: (max: string) => string
+  tooMany: string
   /** Default hint parts: one accepted type, and the size limit. */
-  type: (rule: string) => string;
-  upTo: (max: string) => string;
-};
+  type: (rule: string) => string
+  upTo: (max: string) => string
+}
 
 const defaultLabels: DropZoneLabels = {
   release: "Release to attach",
@@ -56,80 +56,85 @@ const defaultLabels: DropZoneLabels = {
   tooMany: "Too many files",
   type: (rule) => describeType(rule),
   upTo: (max) => `up to ${max}`,
-};
+}
 
 /** Splits files into accepted and rejected with a reason for each rejection. */
 export function checkFiles(
   files: File[],
   rules: FileRules,
-  labelOverrides?: Partial<DropZoneLabels>,
+  labelOverrides?: Partial<DropZoneLabels>
 ) {
-  const labels = { ...defaultLabels, ...labelOverrides };
-  const accepted: File[] = [];
-  const rejected: RejectedFile[] = [];
-  const limit = rules.multiple === false ? 1 : (rules.maxFiles ?? Infinity);
+  const labels = { ...defaultLabels, ...labelOverrides }
+  const accepted: File[] = []
+  const rejected: RejectedFile[] = []
+  const limit = rules.multiple === false ? 1 : (rules.maxFiles ?? Infinity)
   for (const file of files) {
-    if (!matches(file, rules.accept)) rejected.push({ file, reason: labels.unsupported });
+    if (!matches(file, rules.accept))
+      rejected.push({ file, reason: labels.unsupported })
     else if (rules.maxSize && file.size > rules.maxSize)
-      rejected.push({ file, reason: labels.tooLarge(formatBytes(rules.maxSize)) });
-    else if (accepted.length >= limit) rejected.push({ file, reason: labels.tooMany });
-    else accepted.push(file);
+      rejected.push({
+        file,
+        reason: labels.tooLarge(formatBytes(rules.maxSize)),
+      })
+    else if (accepted.length >= limit)
+      rejected.push({ file, reason: labels.tooMany })
+    else accepted.push(file)
   }
-  return { accepted, rejected };
+  return { accepted, rejected }
 }
 
 /** "image/*" → "images", "application/pdf" → "PDF", ".csv" → "CSV". */
 function describeType(rule: string) {
-  const r = rule.trim();
-  if (r.endsWith("/*")) return `${r.slice(0, -2)}s`;
-  return (r.startsWith(".") ? r.slice(1) : r.split("/").pop()!).toUpperCase();
+  const r = rule.trim()
+  if (r.endsWith("/*")) return `${r.slice(0, -2)}s`
+  return (r.startsWith(".") ? r.slice(1) : r.split("/").pop()!).toUpperCase()
 }
 
 const hasFiles = (e: React.DragEvent) =>
-  Array.from(e.dataTransfer.types).includes("Files");
+  Array.from(e.dataTransfer.types).includes("Files")
 
 /** Counts nested dragenter / dragleave so the hover state doesn't flicker over children. */
 function useDragging(onDrop: (files: File[]) => void) {
-  const depth = useRef(0);
-  const [dragging, setDragging] = useState(false);
+  const depth = useRef(0)
+  const [dragging, setDragging] = useState(false)
   return {
     dragging,
     handlers: {
       onDragEnter: (e: React.DragEvent) => {
-        if (!hasFiles(e)) return;
-        e.preventDefault();
-        depth.current += 1;
-        setDragging(true);
+        if (!hasFiles(e)) return
+        e.preventDefault()
+        depth.current += 1
+        setDragging(true)
       },
       onDragOver: (e: React.DragEvent) => {
-        if (hasFiles(e)) e.preventDefault();
+        if (hasFiles(e)) e.preventDefault()
       },
       onDragLeave: () => {
-        depth.current = Math.max(0, depth.current - 1);
-        if (depth.current === 0) setDragging(false);
+        depth.current = Math.max(0, depth.current - 1)
+        if (depth.current === 0) setDragging(false)
       },
       onDrop: (e: React.DragEvent) => {
-        if (!hasFiles(e)) return;
-        e.preventDefault();
-        depth.current = 0;
-        setDragging(false);
-        onDrop(Array.from(e.dataTransfer.files));
+        if (!hasFiles(e)) return
+        e.preventDefault()
+        depth.current = 0
+        setDragging(false)
+        onDrop(Array.from(e.dataTransfer.files))
       },
     },
-  };
+  }
 }
 
 export type DropZoneProps = FileRules & {
-  onFiles: (accepted: File[]) => void;
-  onReject?: (rejected: RejectedFile[]) => void;
-  title?: string;
+  onFiles: (accepted: File[]) => void
+  onReject?: (rejected: RejectedFile[]) => void
+  title?: string
   /** Hint under the title; defaults to the accepted types and size limit. */
-  hint?: string;
-  disabled?: boolean;
+  hint?: string
+  disabled?: boolean
   /** UI strings, for translating the zone and its rejection reasons. */
-  labels?: Partial<DropZoneLabels>;
-  className?: string;
-};
+  labels?: Partial<DropZoneLabels>
+  className?: string
+}
 
 /** A drop target with a browse button; tells the user why a file was turned away. */
 export function DropZone({
@@ -142,18 +147,18 @@ export function DropZone({
   className,
   ...rules
 }: DropZoneProps) {
-  const labels = { ...defaultLabels, ...labelOverrides };
-  const input = useRef<HTMLInputElement>(null);
-  const [rejected, setRejected] = useState<RejectedFile[]>([]);
-  const statusId = useId();
+  const labels = { ...defaultLabels, ...labelOverrides }
+  const input = useRef<HTMLInputElement>(null)
+  const [rejected, setRejected] = useState<RejectedFile[]>([])
+  const statusId = useId()
 
   const take = (files: File[]) => {
-    const result = checkFiles(files, rules, labels);
-    setRejected(result.rejected);
-    if (result.accepted.length) onFiles(result.accepted);
-    if (result.rejected.length) onReject?.(result.rejected);
-  };
-  const { dragging, handlers } = useDragging(take);
+    const result = checkFiles(files, rules, labels)
+    setRejected(result.rejected)
+    if (result.accepted.length) onFiles(result.accepted)
+    if (result.rejected.length) onReject?.(result.rejected)
+  }
+  const { dragging, handlers } = useDragging(take)
   const defaultHint = [
     rules.accept
       ?.split(",")
@@ -162,7 +167,7 @@ export function DropZone({
     rules.maxSize && labels.upTo(formatBytes(rules.maxSize)),
   ]
     .filter(Boolean)
-    .join(" · ");
+    .join(" · ")
 
   return (
     <MotionConfig reducedMotion="user">
@@ -173,7 +178,7 @@ export function DropZone({
           className={cn(
             "flex flex-col items-center gap-3 rounded-2xl bg-foreground/[0.04] px-6 py-8 text-center transition-[background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)]",
             dragging && "bg-brand/12",
-            disabled && "opacity-40",
+            disabled && "opacity-40"
           )}
         >
           <motion.span
@@ -181,13 +186,15 @@ export function DropZone({
             transition={{ duration: 0.2, ease: EASE_OUT }}
             className={cn(
               "flex size-11 items-center justify-center rounded-xl bg-foreground/[0.06] text-muted-foreground transition-colors",
-              dragging && "bg-brand/15 text-brand",
+              dragging && "bg-brand/15 text-brand"
             )}
           >
             <FileArrowUp weight="fill" aria-hidden="true" className="size-5" />
           </motion.span>
           <div>
-            <p className="text-sm font-medium">{dragging ? labels.release : title}</p>
+            <p className="text-sm font-medium">
+              {dragging ? labels.release : title}
+            </p>
             {(hint ?? defaultHint) && (
               <p className="mt-0.5 text-[0.8125rem] text-muted-foreground">
                 {hint ?? defaultHint}
@@ -209,8 +216,8 @@ export function DropZone({
             accept={rules.accept}
             multiple={rules.multiple !== false}
             onChange={(e) => {
-              take(Array.from(e.target.files ?? []));
-              e.target.value = "";
+              take(Array.from(e.target.files ?? []))
+              e.target.value = ""
             }}
           />
         </div>
@@ -251,21 +258,21 @@ export function DropZone({
         </div>
       </div>
     </MotionConfig>
-  );
+  )
 }
 
 export type DropOverlayProps = FileRules & {
-  onFiles: (accepted: File[]) => void;
-  onReject?: (rejected: RejectedFile[]) => void;
+  onFiles: (accepted: File[]) => void
+  onReject?: (rejected: RejectedFile[]) => void
   /** Text on the overlay. */
-  title?: string;
+  title?: string
   /** Shows the overlay regardless of dragging, e.g. for a page-level drag you track yourself. */
-  show?: boolean;
+  show?: boolean
   /** Rejection reasons, for translating. */
-  labels?: Partial<DropZoneLabels>;
-  children: React.ReactNode;
-  className?: string;
-};
+  labels?: Partial<DropZoneLabels>
+  children: React.ReactNode
+  className?: string
+}
 
 /**
  * Wraps a chat (or any area): while files are dragged over it, a full overlay
@@ -282,12 +289,12 @@ export function DropOverlay({
   ...rules
 }: DropOverlayProps) {
   const drag = useDragging((files) => {
-    const { accepted, rejected } = checkFiles(files, rules, labels);
-    if (accepted.length) onFiles(accepted);
-    if (rejected.length) onReject?.(rejected);
-  });
-  const { handlers } = drag;
-  const dragging = show ?? drag.dragging;
+    const { accepted, rejected } = checkFiles(files, rules, labels)
+    if (accepted.length) onFiles(accepted)
+    if (rejected.length) onReject?.(rejected)
+  })
+  const { handlers } = drag
+  const dragging = show ?? drag.dragging
 
   return (
     <MotionConfig reducedMotion="user">
@@ -297,16 +304,29 @@ export function DropOverlay({
           {dragging && (
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1, transition: { duration: 0.15, ease: EASE_OUT } }}
-              exit={{ opacity: 0, transition: { duration: 0.12, ease: EASE_OUT } }}
+              animate={{
+                opacity: 1,
+                transition: { duration: 0.15, ease: EASE_OUT },
+              }}
+              exit={{
+                opacity: 0,
+                transition: { duration: 0.12, ease: EASE_OUT },
+              }}
               className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-[inherit] bg-surface p-1.5"
             >
               <motion.div
                 initial={{ scale: 0.96 }}
-                animate={{ scale: 1, transition: { duration: 0.2, ease: EASE_OUT } }}
+                animate={{
+                  scale: 1,
+                  transition: { duration: 0.2, ease: EASE_OUT },
+                }}
                 className="flex size-full flex-col items-center justify-center gap-3 rounded-2xl bg-brand/12 text-brand"
               >
-                <FileArrowUp weight="fill" aria-hidden="true" className="size-7" />
+                <FileArrowUp
+                  weight="fill"
+                  aria-hidden="true"
+                  className="size-7"
+                />
                 <p className="text-sm font-medium">{title}</p>
               </motion.div>
             </motion.div>
@@ -317,5 +337,5 @@ export function DropOverlay({
         </p>
       </div>
     </MotionConfig>
-  );
+  )
 }

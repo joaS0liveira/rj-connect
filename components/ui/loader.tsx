@@ -1,20 +1,25 @@
-"use client";
+"use client"
 
-import { CircleNotch } from "@phosphor-icons/react";
-import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "motion/react";
-import { useEffect, useState } from "react";
-import { EASE_OUT } from "@/lib/motion-tokens";
-import { cn } from "@/lib/utils";
+import { CircleNotch } from "@phosphor-icons/react"
+import {
+  AnimatePresence,
+  MotionConfig,
+  motion,
+  useReducedMotion,
+} from "motion/react"
+import { useEffect, useState } from "react"
+import { EASE_OUT } from "@/lib/motion-tokens"
+import { cn } from "@/lib/utils"
 
-const spinnerSizes = { sm: "size-3.5", md: "size-4", lg: "size-6" } as const;
+const spinnerSizes = { sm: "size-3.5", md: "size-4", lg: "size-6" } as const
 
 export type SpinnerProps = {
-  size?: keyof typeof spinnerSizes;
+  size?: keyof typeof spinnerSizes
   /** Spoken label; also shown as text next to the icon when `showLabel` is set. */
-  label?: string;
-  showLabel?: boolean;
-  className?: string;
-};
+  label?: string
+  showLabel?: boolean
+  className?: string
+}
 
 /** A spinning ring. With reduced motion it holds still and the label carries the state. */
 export function Spinner({
@@ -26,14 +31,17 @@ export function Spinner({
   return (
     <span
       role="status"
-      className={cn("inline-flex items-center gap-2 text-muted-foreground", className)}
+      className={cn(
+        "inline-flex items-center gap-2 text-muted-foreground",
+        className
+      )}
     >
       <CircleNotch
         weight="bold"
         aria-hidden="true"
         className={cn(
           "shrink-0 animate-spin [animation-duration:700ms] motion-reduce:animate-none",
-          spinnerSizes[size],
+          spinnerSizes[size]
         )}
       />
       {showLabel ? (
@@ -42,28 +50,28 @@ export function Spinner({
         <span className="sr-only">{label}</span>
       )}
     </span>
-  );
+  )
 }
 
 const dotSizes = {
   sm: { dot: "size-1", gap: "gap-1", text: "text-xs" },
   md: { dot: "size-1.5", gap: "gap-1", text: "text-[0.8125rem]" },
   lg: { dot: "size-2", gap: "gap-1.5", text: "text-sm" },
-} as const;
+} as const
 
 export type ThinkingProps = {
-  size?: keyof typeof dotSizes;
+  size?: keyof typeof dotSizes
   /**
    * Words to cycle through next to the dots, e.g. ["Thinking", "Searching", "Writing"].
    * One word stays put; none shows the dots alone.
    */
-  words?: string[];
+  words?: string[]
   /** How long each word stays, in ms. */
-  interval?: number;
+  interval?: number
   /** Spoken label when no words are shown, for translating. */
-  label?: string;
-  className?: string;
-};
+  label?: string
+  className?: string
+}
 
 /** Three dots in a wave, optionally with a rolling verb that says what the agent is doing. */
 export function Thinking({
@@ -73,22 +81,25 @@ export function Thinking({
   label = "Thinking",
   className,
 }: ThinkingProps) {
-  const reduce = useReducedMotion();
-  const [index, setIndex] = useState(0);
-  const s = dotSizes[size];
-  const word = words.length ? words[index % words.length] : undefined;
+  const reduce = useReducedMotion()
+  const [index, setIndex] = useState(0)
+  const s = dotSizes[size]
+  const word = words.length ? words[index % words.length] : undefined
 
   useEffect(() => {
-    if (words.length < 2) return;
-    const timer = setInterval(() => setIndex((i) => i + 1), interval);
-    return () => clearInterval(timer);
-  }, [words.length, interval]);
+    if (words.length < 2) return
+    const timer = setInterval(() => setIndex((i) => i + 1), interval)
+    return () => clearInterval(timer)
+  }, [words.length, interval])
 
   return (
     <MotionConfig reducedMotion="user">
       <span
         role="status"
-        className={cn("inline-flex items-center gap-2 text-muted-foreground", className)}
+        className={cn(
+          "inline-flex items-center gap-2 text-muted-foreground",
+          className
+        )}
       >
         <span aria-hidden="true" className={cn("flex items-center", s.gap)}>
           {[0, 1, 2].map((i) => (
@@ -96,18 +107,30 @@ export function Thinking({
               key={i}
               className={cn("rounded-full bg-current", s.dot)}
               animate={
-                reduce ? { opacity: 0.6 } : { opacity: [0.3, 1, 0.3], y: [0, -2, 0] }
+                reduce
+                  ? { opacity: 0.6 }
+                  : { opacity: [0.3, 1, 0.3], y: [0, -2, 0] }
               }
               transition={
                 reduce
                   ? { duration: 0 }
-                  : { duration: 1, repeat: Infinity, ease: "easeInOut", delay: i * 0.15 }
+                  : {
+                      duration: 1,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                      delay: i * 0.15,
+                    }
               }
             />
           ))}
         </span>
         {word ? (
-          <span className={cn("relative inline-flex h-[1lh] overflow-hidden", s.text)}>
+          <span
+            className={cn(
+              "relative inline-flex h-[1lh] overflow-hidden",
+              s.text
+            )}
+          >
             <AnimatePresence mode="popLayout" initial={false}>
               <motion.span
                 key={word}
@@ -133,5 +156,5 @@ export function Thinking({
         )}
       </span>
     </MotionConfig>
-  );
+  )
 }

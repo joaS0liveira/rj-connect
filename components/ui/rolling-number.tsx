@@ -1,19 +1,19 @@
-"use client";
+"use client"
 
-import { useReducedMotion } from "motion/react";
-import { cn } from "@/lib/utils";
+import { useReducedMotion } from "motion/react"
+import { cn } from "@/lib/utils"
 
 export type RollingNumberProps = {
   /** A number (formatted with `format` or en-US grouping) or a preformatted string like "87.2k". */
-  value: number | string;
-  format?: (value: number) => string;
+  value: number | string
+  format?: (value: number) => string
   /** Delay between neighbouring digits, right to left, in ms. */
-  stagger?: number;
-  className?: string;
-};
+  stagger?: number
+  className?: string
+}
 
-const DIGITS = "0123456789";
-const EASE = "cubic-bezier(0.23, 1, 0.32, 1)";
+const DIGITS = "0123456789"
+const EASE = "cubic-bezier(0.23, 1, 0.32, 1)"
 
 /**
  * Odometer-style number: each digit rolls to its new value on its own wheel,
@@ -26,14 +26,14 @@ export function RollingNumber({
   stagger = 24,
   className,
 }: RollingNumberProps) {
-  const reduce = useReducedMotion();
+  const reduce = useReducedMotion()
   const text =
     typeof value === "number"
       ? format
         ? format(value)
         : value.toLocaleString("en-US")
-      : value;
-  const chars = Array.from(text);
+      : value
+  const chars = Array.from(text)
 
   return (
     // Numbers always read left to right, even inside RTL text.
@@ -41,7 +41,7 @@ export function RollingNumber({
       <span className="sr-only">{text}</span>
       <span aria-hidden="true" className="inline-flex">
         {chars.map((char, i) => {
-          const fromRight = chars.length - 1 - i;
+          const fromRight = chars.length - 1 - i
           return DIGITS.includes(char) ? (
             <Digit
               key={fromRight}
@@ -53,11 +53,11 @@ export function RollingNumber({
             <span key={`${fromRight}${char}`} className="whitespace-pre">
               {char}
             </span>
-          );
+          )
         })}
       </span>
     </span>
-  );
+  )
 }
 
 function Digit({
@@ -65,9 +65,9 @@ function Digit({
   delay,
   instant,
 }: {
-  digit: number;
-  delay: number;
-  instant: boolean;
+  digit: number
+  delay: number
+  instant: boolean
 }) {
   return (
     <span className="relative inline-block h-[1lh] overflow-hidden [mask-image:linear-gradient(transparent,black_22%,black_78%,transparent)]">
@@ -90,5 +90,5 @@ function Digit({
         ))}
       </span>
     </span>
-  );
+  )
 }

@@ -1,36 +1,36 @@
-"use client";
+"use client"
 
-import { createContext, useContext } from "react";
-import { Tooltip } from "@/components/ui/tooltip-hint";
-import { cn } from "@/lib/utils";
+import { createContext, useContext } from "react"
+import { Tooltip } from "@/components/ui/tooltip-hint"
+import { cn } from "@/lib/utils"
 
-export type AvatarSize = "xs" | "sm" | "md" | "lg";
-export type AvatarStatus = "online" | "away" | "busy" | "working";
+export type AvatarSize = "xs" | "sm" | "md" | "lg"
+export type AvatarStatus = "online" | "away" | "busy" | "working"
 
 export type AvatarProps = {
-  name: string;
+  name: string
   /** Image URL; falls back to initials on a tint derived from the name. */
-  src?: string;
-  size?: AvatarSize;
+  src?: string
+  size?: AvatarSize
   /** `agent` is a rounded square, `person` a circle. */
-  kind?: "agent" | "person";
-  status?: AvatarStatus;
+  kind?: "agent" | "person"
+  status?: AvatarStatus
   /** Your own UI strings, for translating. */
-  labels?: Partial<AvatarLabels>;
-  className?: string;
-};
+  labels?: Partial<AvatarLabels>
+  className?: string
+}
 
 export type AvatarLabels = {
-  status: Record<AvatarStatus, string>;
+  status: Record<AvatarStatus, string>
   /** Accessible name with a status badge. */
-  withStatus: (name: string, status: string) => string;
+  withStatus: (name: string, status: string) => string
   /** AvatarGroup's accessible name. */
-  participants: (count: number) => string;
+  participants: (count: number) => string
   /** The "+N" chip's accessible name. */
-  more: (count: number, names: string) => string;
+  more: (count: number, names: string) => string
   /** Joins the hidden names for the "+N" tooltip. */
-  list: (names: string[]) => string;
-};
+  list: (names: string[]) => string
+}
 
 const defaultLabels: AvatarLabels = {
   status: { online: "online", away: "away", busy: "busy", working: "working" },
@@ -38,10 +38,12 @@ const defaultLabels: AvatarLabels = {
   participants: (count) => `${count} participants`,
   more: (count, names) => `and ${count} more: ${names}`,
   list: (names) => names.join(", "),
-};
+}
 
 // AvatarGroup hands its labels to the avatars inside it.
-const LabelsContext = createContext<Partial<AvatarLabels> | undefined>(undefined);
+const LabelsContext = createContext<Partial<AvatarLabels> | undefined>(
+  undefined
+)
 
 // Tints picked deterministically from the name.
 const tints = [
@@ -52,33 +54,36 @@ const tints = [
   "#30c05a",
   "#ff9f0a",
   "#ff375f",
-];
+]
 
-const sizes: Record<AvatarSize, { box: string; text: string; badge: string }> = {
-  xs: { box: "size-5", text: "text-[0.5625rem]", badge: "size-2" },
-  sm: { box: "size-7", text: "text-[0.6875rem]", badge: "size-2.5" },
-  md: { box: "size-9", text: "text-[0.8125rem]", badge: "size-3" },
-  lg: { box: "size-12", text: "text-base", badge: "size-3.5" },
-};
+const sizes: Record<AvatarSize, { box: string; text: string; badge: string }> =
+  {
+    xs: { box: "size-5", text: "text-[0.5625rem]", badge: "size-2" },
+    sm: { box: "size-7", text: "text-[0.6875rem]", badge: "size-2.5" },
+    md: { box: "size-9", text: "text-[0.8125rem]", badge: "size-3" },
+    lg: { box: "size-12", text: "text-base", badge: "size-3.5" },
+  }
 
 const statusColors: Record<Exclude<AvatarStatus, "working">, string> = {
   online: "bg-positive",
   away: "bg-warning",
   busy: "bg-negative",
-};
+}
 
 export function initials(name: string) {
   const words = name
     .trim()
     .split(/[\s._-]+/)
-    .filter(Boolean);
-  return (words.length > 1 ? words[0][0] + words[1][0] : name.slice(0, 2)).toUpperCase();
+    .filter(Boolean)
+  return (
+    words.length > 1 ? words[0][0] + words[1][0] : name.slice(0, 2)
+  ).toUpperCase()
 }
 
 export function tintFor(name: string) {
-  let hash = 0;
-  for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) | 0;
-  return tints[Math.abs(hash) % tints.length];
+  let hash = 0
+  for (const char of name) hash = (hash * 31 + char.charCodeAt(0)) | 0
+  return tints[Math.abs(hash) % tints.length]
 }
 
 export function Avatar({
@@ -90,15 +95,21 @@ export function Avatar({
   labels: labelOverrides,
   className,
 }: AvatarProps) {
-  const labels = { ...defaultLabels, ...useContext(LabelsContext), ...labelOverrides };
-  const s = sizes[size];
-  const shape = kind === "agent" ? "rounded-[30%]" : "rounded-full";
-  const tint = tintFor(name);
+  const labels = {
+    ...defaultLabels,
+    ...useContext(LabelsContext),
+    ...labelOverrides,
+  }
+  const s = sizes[size]
+  const shape = kind === "agent" ? "rounded-[30%]" : "rounded-full"
+  const tint = tintFor(name)
 
   return (
     <span
       role="img"
-      aria-label={status ? labels.withStatus(name, labels.status[status]) : name}
+      aria-label={
+        status ? labels.withStatus(name, labels.status[status]) : name
+      }
       className={cn("relative inline-flex shrink-0", s.box, className)}
     >
       {src ? (
@@ -110,7 +121,7 @@ export function Avatar({
           className={cn(
             "flex size-full items-center justify-center font-medium",
             shape,
-            s.text,
+            s.text
           )}
           style={{
             background: `color-mix(in oklab, ${tint} 22%, transparent)`,
@@ -125,45 +136,52 @@ export function Avatar({
         <span
           aria-hidden="true"
           className={cn(
-            "absolute -end-0.5 -bottom-0.5 flex items-center justify-center rounded-full bg-[var(--avatar-gap,var(--background))] p-[2px]",
+            "absolute -end-0.5 -bottom-0.5 flex items-center justify-center rounded-full bg-[var(--avatar-gap,var(--background))] p-[2px]"
           )}
         >
           {status === "working" ? (
             <span
               className={cn(
                 "block animate-spin rounded-full bg-[conic-gradient(var(--brand)_0_70%,transparent_70%)] motion-reduce:animate-none",
-                s.badge,
+                s.badge
               )}
               style={{
                 mask: "radial-gradient(circle, transparent 38%, #000 40%)",
-                WebkitMask: "radial-gradient(circle, transparent 38%, #000 40%)",
+                WebkitMask:
+                  "radial-gradient(circle, transparent 38%, #000 40%)",
               }}
             />
           ) : (
-            <span className={cn("block rounded-full", s.badge, statusColors[status])} />
+            <span
+              className={cn(
+                "block rounded-full",
+                s.badge,
+                statusColors[status]
+              )}
+            />
           )}
         </span>
       )}
     </span>
-  );
+  )
 }
 
 export type AvatarGroupProps = {
-  people: Omit<AvatarProps, "size" | "className">[];
-  size?: AvatarSize;
+  people: Omit<AvatarProps, "size" | "className">[]
+  size?: AvatarSize
   /** Avatars shown before collapsing the rest into "+N". */
-  max?: number;
+  max?: number
   /** Your own UI strings, for translating; passed on to each avatar. */
-  labels?: Partial<AvatarLabels>;
-  className?: string;
-};
+  labels?: Partial<AvatarLabels>
+  className?: string
+}
 
 const overlap: Record<AvatarSize, string> = {
   xs: "-ms-1",
   sm: "-ms-1.5",
   md: "-ms-2",
   lg: "-ms-3",
-};
+}
 
 /**
  * Overlapping avatars. Each one sits in a gap of the surrounding background
@@ -176,10 +194,10 @@ export function AvatarGroup({
   labels: labelOverrides,
   className,
 }: AvatarGroupProps) {
-  const labels = { ...defaultLabels, ...labelOverrides };
-  const shown = people.slice(0, max);
-  const rest = people.slice(max);
-  const s = sizes[size];
+  const labels = { ...defaultLabels, ...labelOverrides }
+  const shown = people.slice(0, max)
+  const rest = people.slice(max)
+  const s = sizes[size]
 
   return (
     <LabelsContext.Provider value={labelOverrides}>
@@ -195,7 +213,7 @@ export function AvatarGroup({
               className={cn(
                 "relative rounded-full bg-[var(--avatar-gap,var(--background))] p-[2px] outline-offset-0",
                 person.kind === "agent" && "rounded-[30%]",
-                i > 0 && overlap[size],
+                i > 0 && overlap[size]
               )}
             >
               <Avatar {...person} size={size} />
@@ -206,10 +224,13 @@ export function AvatarGroup({
           <Tooltip content={labels.list(rest.map((p) => p.name))} side="bottom">
             <span
               tabIndex={0}
-              aria-label={labels.more(rest.length, labels.list(rest.map((p) => p.name)))}
+              aria-label={labels.more(
+                rest.length,
+                labels.list(rest.map((p) => p.name))
+              )}
               className={cn(
                 "relative rounded-full bg-[var(--avatar-gap,var(--background))] p-[2px]",
-                overlap[size],
+                overlap[size]
               )}
             >
               <span
@@ -217,7 +238,7 @@ export function AvatarGroup({
                 className={cn(
                   "flex items-center justify-center rounded-full bg-foreground/[0.08] font-medium text-muted-foreground tabular-nums",
                   s.box,
-                  s.text,
+                  s.text
                 )}
               >
                 +{rest.length}
@@ -227,5 +248,5 @@ export function AvatarGroup({
         )}
       </div>
     </LabelsContext.Provider>
-  );
+  )
 }

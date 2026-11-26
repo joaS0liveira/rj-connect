@@ -1,19 +1,19 @@
-"use client";
+"use client"
 
-import { MagnifyingGlass, X } from "@phosphor-icons/react";
-import { useId } from "react";
-import { cn } from "@/lib/utils";
+import { MagnifyingGlass, X } from "@phosphor-icons/react"
+import { useId } from "react"
+import { cn } from "@/lib/utils"
 
 const control =
-  "w-full bg-foreground/[0.06] text-sm text-foreground outline-none transition-[background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] placeholder:text-muted-foreground hover:bg-foreground/[0.08] focus-visible:bg-foreground/[0.1] disabled:opacity-40 aria-invalid:bg-negative/10";
+  "w-full bg-foreground/[0.06] text-sm text-foreground outline-none transition-[background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] placeholder:text-muted-foreground hover:bg-foreground/[0.08] focus-visible:bg-foreground/[0.1] disabled:opacity-40 aria-invalid:bg-negative/10"
 
 type FieldProps = {
-  label?: React.ReactNode;
-  description?: React.ReactNode;
+  label?: React.ReactNode
+  description?: React.ReactNode
   /** Error text; marks the control invalid and is announced with it. */
-  error?: React.ReactNode;
-  className?: string;
-};
+  error?: React.ReactNode
+  className?: string
+}
 
 /** Shared label / description / error wiring for every field. */
 function Field({
@@ -23,11 +23,11 @@ function Field({
   className,
   children,
 }: FieldProps & {
-  children: (ids: Record<string, string | undefined>) => React.ReactNode;
+  children: (ids: Record<string, string | undefined>) => React.ReactNode
 }) {
-  const id = useId();
-  const descriptionId = description ? `${id}-description` : undefined;
-  const errorId = error ? `${id}-error` : undefined;
+  const id = useId()
+  const descriptionId = description ? `${id}-description` : undefined
+  const errorId = error ? `${id}-error` : undefined
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
       {label && (
@@ -52,11 +52,11 @@ function Field({
         </p>
       )}
     </div>
-  );
+  )
 }
 
 export type TextFieldProps = FieldProps &
-  Omit<React.ComponentProps<"input">, "className">;
+  Omit<React.ComponentProps<"input">, "className">
 
 export function TextField({
   label,
@@ -66,27 +66,36 @@ export function TextField({
   ...props
 }: TextFieldProps) {
   return (
-    <Field label={label} description={description} error={error} className={className}>
+    <Field
+      label={label}
+      description={description}
+      error={error}
+      className={className}
+    >
       {(ids) => (
-        <input {...ids} {...props} className={cn(control, "h-9 rounded-full px-3.5")} />
+        <input
+          {...ids}
+          {...props}
+          className={cn(control, "h-9 rounded-full px-3.5")}
+        />
       )}
     </Field>
-  );
+  )
 }
 
 export type SearchFieldLabels = {
   /** Screen-reader name of the clear button. */
-  clear: string;
-};
+  clear: string
+}
 
-const defaultSearchLabels: SearchFieldLabels = { clear: "Clear search" };
+const defaultSearchLabels: SearchFieldLabels = { clear: "Clear search" }
 
 export type SearchFieldProps = Omit<TextFieldProps, "type"> & {
   /** Shows a clear button while there is text. */
-  onClear?: () => void;
+  onClear?: () => void
   /** UI strings, for translating. */
-  labels?: Partial<SearchFieldLabels>;
-};
+  labels?: Partial<SearchFieldLabels>
+}
 
 export function SearchField({
   label,
@@ -99,9 +108,14 @@ export function SearchField({
   labels: labelOverrides,
   ...props
 }: SearchFieldProps) {
-  const labels = { ...defaultSearchLabels, ...labelOverrides };
+  const labels = { ...defaultSearchLabels, ...labelOverrides }
   return (
-    <Field label={label} description={description} error={error} className={className}>
+    <Field
+      label={label}
+      description={description}
+      error={error}
+      className={className}
+    >
       {(ids) => (
         <div className="relative">
           <MagnifyingGlass
@@ -118,7 +132,7 @@ export function SearchField({
             {...props}
             className={cn(
               control,
-              "h-9 rounded-full ps-8 pe-9 [&::-webkit-search-cancel-button]:hidden",
+              "h-9 rounded-full ps-8 pe-9 [&::-webkit-search-cancel-button]:hidden"
             )}
           />
           {onClear && value !== undefined && value !== "" && (
@@ -134,11 +148,11 @@ export function SearchField({
         </div>
       )}
     </Field>
-  );
+  )
 }
 
 export type TextAreaProps = FieldProps &
-  Omit<React.ComponentProps<"textarea">, "className">;
+  Omit<React.ComponentProps<"textarea">, "className">
 
 export function TextArea({
   label,
@@ -149,15 +163,23 @@ export function TextArea({
   ...props
 }: TextAreaProps) {
   return (
-    <Field label={label} description={description} error={error} className={className}>
+    <Field
+      label={label}
+      description={description}
+      error={error}
+      className={className}
+    >
       {(ids) => (
         <textarea
           {...ids}
           rows={rows}
           {...props}
-          className={cn(control, "resize-none rounded-xl px-3.5 py-2.5 leading-relaxed")}
+          className={cn(
+            control,
+            "resize-none rounded-xl px-3.5 py-2.5 leading-relaxed"
+          )}
         />
       )}
     </Field>
-  );
+  )
 }

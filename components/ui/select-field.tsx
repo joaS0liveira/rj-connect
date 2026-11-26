@@ -1,44 +1,47 @@
-"use client";
+"use client"
 
-import { CaretDown, Check, type Icon } from "@phosphor-icons/react";
-import { motion, useReducedMotion } from "motion/react";
-import { Popover as PopoverPrimitive, Select as SelectPrimitive } from "radix-ui";
-import { useId, useMemo, useState } from "react";
-import { EASE_OUT, instant } from "@/lib/motion-tokens";
-import { cn } from "@/lib/utils";
-import { Spinner } from "@/components/ui/loader";
+import { CaretDown, Check, type Icon } from "@phosphor-icons/react"
+import { motion, useReducedMotion } from "motion/react"
+import {
+  Popover as PopoverPrimitive,
+  Select as SelectPrimitive,
+} from "radix-ui"
+import { useId, useMemo, useState } from "react"
+import { EASE_OUT, instant } from "@/lib/motion-tokens"
+import { cn } from "@/lib/utils"
+import { Spinner } from "@/components/ui/loader"
 
 // Radix's `asChild`, passed as a spread: the shadcn CLI rewrites a literal
 // `asChild` attribute into Base UI's `render` prop for base-* styles, which
 // would break these Radix parts after install.
-const slot = { asChild: true } as const;
+const slot = { asChild: true } as const
 
 export type SelectOption = {
-  value: string;
-  label: string;
-  icon?: Icon;
-  description?: string;
-  disabled?: boolean;
-};
+  value: string
+  label: string
+  icon?: Icon
+  description?: string
+  disabled?: boolean
+}
 
-export type SelectGroup = { label?: string; options: SelectOption[] };
+export type SelectGroup = { label?: string; options: SelectOption[] }
 
 type FieldProps = {
-  label?: React.ReactNode;
-  description?: React.ReactNode;
+  label?: React.ReactNode
+  description?: React.ReactNode
   /** Error text; marks the control invalid and is announced with it. */
-  error?: React.ReactNode;
-  placeholder?: string;
-  disabled?: boolean;
-  className?: string;
-};
+  error?: React.ReactNode
+  placeholder?: string
+  disabled?: boolean
+  className?: string
+}
 
 const control =
-  "flex h-9 w-full items-center gap-2 rounded-full bg-foreground/[0.06] px-3.5 text-start text-sm text-foreground outline-none transition-[background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-foreground/[0.08] focus-visible:bg-foreground/[0.1] disabled:opacity-40 aria-invalid:bg-negative/10 data-[placeholder]:text-muted-foreground";
+  "flex h-9 w-full items-center gap-2 rounded-full bg-foreground/[0.06] px-3.5 text-start text-sm text-foreground outline-none transition-[background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-foreground/[0.08] focus-visible:bg-foreground/[0.1] disabled:opacity-40 aria-invalid:bg-negative/10 data-[placeholder]:text-muted-foreground"
 const surface =
-  "z-50 rounded-2xl bg-surface-inset p-1 text-foreground shadow-[0_12px_32px_-12px_rgb(0_0_0/0.28)] outline-none dark:bg-surface-raised dark:shadow-[0_16px_40px_-12px_rgb(0_0_0/0.7)]";
+  "z-50 rounded-2xl bg-surface-inset p-1 text-foreground shadow-[0_12px_32px_-12px_rgb(0_0_0/0.28)] outline-none dark:bg-surface-raised dark:shadow-[0_16px_40px_-12px_rgb(0_0_0/0.7)]"
 const row =
-  "relative flex cursor-default items-center gap-2.5 rounded-xl py-1.5 ps-2.5 pe-8 text-[0.8125rem] outline-none select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-40 data-[highlighted]:bg-foreground/[0.07] aria-selected:bg-foreground/[0.07]";
+  "relative flex cursor-default items-center gap-2.5 rounded-xl py-1.5 ps-2.5 pe-8 text-[0.8125rem] outline-none select-none data-[disabled]:pointer-events-none data-[disabled]:opacity-40 data-[highlighted]:bg-foreground/[0.07] aria-selected:bg-foreground/[0.07]"
 
 function Field({
   label,
@@ -48,14 +51,14 @@ function Field({
   children,
 }: Pick<FieldProps, "label" | "description" | "error" | "className"> & {
   children: (ids: {
-    id: string;
-    "aria-describedby"?: string;
-    "aria-invalid"?: "true";
-  }) => React.ReactNode;
+    id: string
+    "aria-describedby"?: string
+    "aria-invalid"?: "true"
+  }) => React.ReactNode
 }) {
-  const id = useId();
-  const descriptionId = description ? `${id}-description` : undefined;
-  const errorId = error ? `${id}-error` : undefined;
+  const id = useId()
+  const descriptionId = description ? `${id}-description` : undefined
+  const errorId = error ? `${id}-error` : undefined
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
       {label && (
@@ -80,7 +83,7 @@ function Field({
         </p>
       )}
     </div>
-  );
+  )
 }
 
 function OptionBody({ option }: { option: SelectOption }) {
@@ -102,35 +105,37 @@ function OptionBody({ option }: { option: SelectOption }) {
         )}
       </span>
     </>
-  );
+  )
 }
 
 /** Grows in from the trigger; nothing animates when it was opened from the keyboard. */
 function useMenuMotion() {
-  const reduce = useReducedMotion();
-  const [viaKeyboard, setViaKeyboard] = useState(false);
+  const reduce = useReducedMotion()
+  const [viaKeyboard, setViaKeyboard] = useState(false)
   return {
     setViaKeyboard,
     motionProps: {
       initial: { opacity: 0, scale: reduce ? 1 : 0.97 },
       animate: { opacity: 1, scale: 1 },
-      transition: viaKeyboard || reduce ? instant : { duration: 0.16, ease: EASE_OUT },
+      transition:
+        viaKeyboard || reduce ? instant : { duration: 0.16, ease: EASE_OUT },
     },
-  };
+  }
 }
 
 export type SelectProps = FieldProps & {
   /** Flat options, or groups with labels. */
-  options: SelectOption[] | SelectGroup[];
-  value?: string;
-  defaultValue?: string;
-  onValueChange?: (value: string) => void;
-  name?: string;
-  required?: boolean;
-};
+  options: SelectOption[] | SelectGroup[]
+  value?: string
+  defaultValue?: string
+  onValueChange?: (value: string) => void
+  name?: string
+  required?: boolean
+}
 
-const isGrouped = (options: SelectOption[] | SelectGroup[]): options is SelectGroup[] =>
-  options.length > 0 && "options" in options[0];
+const isGrouped = (
+  options: SelectOption[] | SelectGroup[]
+): options is SelectGroup[] => options.length > 0 && "options" in options[0]
 
 /** Pick one option from a list. Type to jump to an option. */
 export function Select({
@@ -147,11 +152,16 @@ export function Select({
   error,
   className,
 }: SelectProps) {
-  const groups = isGrouped(options) ? options : [{ options }];
-  const { setViaKeyboard, motionProps } = useMenuMotion();
+  const groups = isGrouped(options) ? options : [{ options }]
+  const { setViaKeyboard, motionProps } = useMenuMotion()
 
   return (
-    <Field label={label} description={description} error={error} className={className}>
+    <Field
+      label={label}
+      description={description}
+      error={error}
+      className={className}
+    >
       {(ids) => (
         <SelectPrimitive.Root
           value={value}
@@ -171,7 +181,10 @@ export function Select({
               <SelectPrimitive.Value placeholder={placeholder} />
             </span>
             <SelectPrimitive.Icon>
-              <CaretDown weight="bold" className="size-3.5 text-muted-foreground" />
+              <CaretDown
+                weight="bold"
+                className="size-3.5 text-muted-foreground"
+              />
             </SelectPrimitive.Icon>
           </SelectPrimitive.Trigger>
           <SelectPrimitive.Portal>
@@ -184,13 +197,17 @@ export function Select({
               <motion.div
                 {...motionProps}
                 style={{
-                  transformOrigin: "var(--radix-select-content-transform-origin)",
+                  transformOrigin:
+                    "var(--radix-select-content-transform-origin)",
                 }}
                 className={surface}
               >
                 <SelectPrimitive.Viewport className="max-h-72">
                   {groups.map((group, g) => (
-                    <SelectPrimitive.Group key={g} className={cn(g > 0 && "mt-1 pt-1")}>
+                    <SelectPrimitive.Group
+                      key={g}
+                      className={cn(g > 0 && "mt-1 pt-1")}
+                    >
                       {group.label && (
                         <SelectPrimitive.Label className="px-2.5 pt-1 pb-0.5 text-[0.6875rem] font-medium text-muted-foreground">
                           {group.label}
@@ -221,7 +238,10 @@ export function Select({
                             )}
                           </span>
                           <SelectPrimitive.ItemIndicator className="absolute end-2.5">
-                            <Check weight="bold" className="size-3.5 text-brand" />
+                            <Check
+                              weight="bold"
+                              className="size-3.5 text-brand"
+                            />
                           </SelectPrimitive.ItemIndicator>
                         </SelectPrimitive.Item>
                       ))}
@@ -234,36 +254,36 @@ export function Select({
         </SelectPrimitive.Root>
       )}
     </Field>
-  );
+  )
 }
 
 export type ComboboxProps = FieldProps & {
-  options: SelectOption[];
-  value?: string | null;
-  onValueChange?: (value: string | null) => void;
+  options: SelectOption[]
+  value?: string | null
+  onValueChange?: (value: string | null) => void
   /**
    * Called as the user types. Pass it to filter on your side (e.g. a server
    * search) — then `options` are shown as given. Without it, options are
    * filtered by label.
    */
-  onQueryChange?: (query: string) => void;
-  loading?: boolean;
-  emptyText?: string;
+  onQueryChange?: (query: string) => void
+  loading?: boolean
+  emptyText?: string
   /** UI strings, for translating the loading state. */
-  labels?: Partial<ComboboxLabels>;
-};
+  labels?: Partial<ComboboxLabels>
+}
 
 export type ComboboxLabels = {
   /** Screen-reader name of the spinner. */
-  searching: string;
+  searching: string
   /** Shown in the list while results load. */
-  searchingList: string;
-};
+  searchingList: string
+}
 
 const defaultComboboxLabels: ComboboxLabels = {
   searching: "Searching",
   searchingList: "Searching…",
-};
+}
 
 /** Type to search a list and pick one option. */
 export function Combobox({
@@ -281,35 +301,42 @@ export function Combobox({
   labels: labelOverrides,
   className,
 }: ComboboxProps) {
-  const labels = { ...defaultComboboxLabels, ...labelOverrides };
-  const listId = useId();
-  const [open, setOpen] = useState(false);
+  const labels = { ...defaultComboboxLabels, ...labelOverrides }
+  const listId = useId()
+  const [open, setOpen] = useState(false)
   // The list renders in a portal under <body>; it takes the input's direction.
-  const [dir, setDir] = useState<"ltr" | "rtl">("ltr");
-  const [query, setQuery] = useState("");
-  const [valueState, setValueState] = useState<string | null>(null);
-  const [active, setActive] = useState(0);
-  const value = valueProp === undefined ? valueState : valueProp;
-  const selected = options.find((o) => o.value === value);
-  const { setViaKeyboard, motionProps } = useMenuMotion();
+  const [dir, setDir] = useState<"ltr" | "rtl">("ltr")
+  const [query, setQuery] = useState("")
+  const [valueState, setValueState] = useState<string | null>(null)
+  const [active, setActive] = useState(0)
+  const value = valueProp === undefined ? valueState : valueProp
+  const selected = options.find((o) => o.value === value)
+  const { setViaKeyboard, motionProps } = useMenuMotion()
 
   const shown = useMemo(
     () =>
       onQueryChange || !query
         ? options
-        : options.filter((o) => o.label.toLowerCase().includes(query.toLowerCase())),
-    [options, query, onQueryChange],
-  );
+        : options.filter((o) =>
+            o.label.toLowerCase().includes(query.toLowerCase())
+          ),
+    [options, query, onQueryChange]
+  )
 
   const choose = (option: SelectOption) => {
-    setValueState(option.value);
-    onValueChange?.(option.value);
-    setQuery("");
-    setOpen(false);
-  };
+    setValueState(option.value)
+    onValueChange?.(option.value)
+    setQuery("")
+    setOpen(false)
+  }
 
   return (
-    <Field label={label} description={description} error={error} className={className}>
+    <Field
+      label={label}
+      description={description}
+      error={error}
+      className={className}
+    >
       {(ids) => (
         <PopoverPrimitive.Root open={open && !disabled} onOpenChange={setOpen}>
           <PopoverPrimitive.Anchor {...slot}>
@@ -331,36 +358,38 @@ export function Combobox({
                   setDir(
                     getComputedStyle(event.currentTarget).direction === "rtl"
                       ? "rtl"
-                      : "ltr",
-                  );
-                  setOpen(true);
+                      : "ltr"
+                  )
+                  setOpen(true)
                 }}
                 onChange={(event) => {
-                  setQuery(event.target.value);
-                  setActive(0);
-                  setOpen(true);
-                  onQueryChange?.(event.target.value);
+                  setQuery(event.target.value)
+                  setActive(0)
+                  setOpen(true)
+                  onQueryChange?.(event.target.value)
                 }}
                 onKeyDown={(event) => {
                   if (event.key === "ArrowDown" || event.key === "ArrowUp") {
-                    event.preventDefault();
-                    setViaKeyboard(true);
-                    setOpen(true);
-                    const step = event.key === "ArrowDown" ? 1 : -1;
+                    event.preventDefault()
+                    setViaKeyboard(true)
+                    setOpen(true)
+                    const step = event.key === "ArrowDown" ? 1 : -1
                     setActive((i) =>
-                      shown.length ? (i + step + shown.length) % shown.length : 0,
-                    );
+                      shown.length
+                        ? (i + step + shown.length) % shown.length
+                        : 0
+                    )
                   } else if (event.key === "Enter" && open && shown[active]) {
-                    event.preventDefault();
-                    if (!shown[active].disabled) choose(shown[active]);
+                    event.preventDefault()
+                    if (!shown[active].disabled) choose(shown[active])
                   } else if (event.key === "Escape") {
-                    setOpen(false);
+                    setOpen(false)
                   }
                 }}
                 className={cn(
                   control,
                   "pe-9 placeholder:text-muted-foreground",
-                  selected && !open && "placeholder:text-foreground",
+                  selected && !open && "placeholder:text-foreground"
                 )}
               />
               {loading ? (
@@ -386,19 +415,26 @@ export function Combobox({
               onOpenAutoFocus={(event) => event.preventDefault()}
               onInteractOutside={(event) => {
                 // Clicks on the input itself shouldn't close and reopen the list.
-                if ((event.target as HTMLElement).closest?.('[role="combobox"]'))
-                  event.preventDefault();
+                if (
+                  (event.target as HTMLElement).closest?.('[role="combobox"]')
+                )
+                  event.preventDefault()
               }}
               className="z-50 w-(--radix-popover-trigger-width) min-w-48 outline-none"
             >
               <motion.div
                 {...motionProps}
                 style={{
-                  transformOrigin: "var(--radix-popover-content-transform-origin)",
+                  transformOrigin:
+                    "var(--radix-popover-content-transform-origin)",
                 }}
                 className={surface}
               >
-                <ul id={listId} role="listbox" className="max-h-72 overflow-y-auto">
+                <ul
+                  id={listId}
+                  role="listbox"
+                  className="max-h-72 overflow-y-auto"
+                >
                   {shown.map((option, i) => (
                     <li
                       key={option.value}
@@ -437,5 +473,5 @@ export function Combobox({
         </PopoverPrimitive.Root>
       )}
     </Field>
-  );
+  )
 }

@@ -1,25 +1,30 @@
-"use client";
+"use client"
 
-import { CaretDown, type Icon } from "@phosphor-icons/react";
-import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "motion/react";
-import { useId, useState } from "react";
-import { EASE_OUT, spring } from "@/lib/motion-tokens";
-import { cn } from "@/lib/utils";
+import { CaretDown, type Icon } from "@phosphor-icons/react"
+import {
+  AnimatePresence,
+  MotionConfig,
+  motion,
+  useReducedMotion,
+} from "motion/react"
+import { useId, useState } from "react"
+import { EASE_OUT, spring } from "@/lib/motion-tokens"
+import { cn } from "@/lib/utils"
 
 type SectionProps = {
-  title: React.ReactNode;
+  title: React.ReactNode
   /** Optional leading Phosphor icon, filled. */
-  icon?: Icon;
+  icon?: Icon
   /** Secondary text at the end of the header, e.g. a count or a time. */
-  meta?: React.ReactNode;
-  open: boolean;
-  onToggle: (fromKeyboard: boolean) => void;
-  disabled?: boolean;
+  meta?: React.ReactNode
+  open: boolean
+  onToggle: (fromKeyboard: boolean) => void
+  disabled?: boolean
   /** Skip the height animation (keyboard toggles). */
-  instant: boolean;
-  className?: string;
-  children: React.ReactNode;
-};
+  instant: boolean
+  className?: string
+  children: React.ReactNode
+}
 
 /** One header + body pair; shared by Accordion items and Collapsible. */
 function Section({
@@ -33,9 +38,9 @@ function Section({
   className,
   children,
 }: SectionProps) {
-  const id = useId();
-  const reduce = useReducedMotion();
-  const still = instant || !!reduce;
+  const id = useId()
+  const reduce = useReducedMotion()
+  const still = instant || !!reduce
 
   return (
     <div className={cn("rounded-xl", className)}>
@@ -68,7 +73,7 @@ function Section({
             className={cn(
               "size-3.5 shrink-0 text-muted-foreground transition-transform duration-200 ease-[cubic-bezier(0.77,0,0.175,1)]",
               open && "rotate-180",
-              still && "transition-none",
+              still && "transition-none"
             )}
           />
         </button>
@@ -85,14 +90,20 @@ function Section({
               opacity: 1,
               transition: still
                 ? { duration: 0 }
-                : { height: spring, opacity: { duration: 0.2, ease: EASE_OUT } },
+                : {
+                    height: spring,
+                    opacity: { duration: 0.2, ease: EASE_OUT },
+                  },
             }}
             exit={{
               height: 0,
               opacity: 0,
               transition: still
                 ? { duration: 0 }
-                : { height: { ...spring, duration: 0.22 }, opacity: { duration: 0.12 } },
+                : {
+                    height: { ...spring, duration: 0.22 },
+                    opacity: { duration: 0.12 },
+                  },
             }}
             className="overflow-hidden"
           >
@@ -103,27 +114,27 @@ function Section({
         )}
       </AnimatePresence>
     </div>
-  );
+  )
 }
 
 export type AccordionItem = {
-  id: string;
-  title: React.ReactNode;
-  icon?: Icon;
-  meta?: React.ReactNode;
-  content: React.ReactNode;
-  disabled?: boolean;
-};
+  id: string
+  title: React.ReactNode
+  icon?: Icon
+  meta?: React.ReactNode
+  content: React.ReactNode
+  disabled?: boolean
+}
 
 export type AccordionProps = {
-  items: AccordionItem[];
+  items: AccordionItem[]
   /** `single` keeps at most one item open; `multiple` lets any number open. */
-  type?: "single" | "multiple";
-  value?: string[];
-  defaultValue?: string[];
-  onValueChange?: (open: string[]) => void;
-  className?: string;
-};
+  type?: "single" | "multiple"
+  value?: string[]
+  defaultValue?: string[]
+  onValueChange?: (open: string[]) => void
+  className?: string
+}
 
 /** A list of collapsible sections. Items separate by spacing, not dividers. */
 export function Accordion({
@@ -134,21 +145,21 @@ export function Accordion({
   onValueChange,
   className,
 }: AccordionProps) {
-  const [inner, setInner] = useState(defaultValue);
-  const open = valueProp ?? inner;
-  const [instant, setInstant] = useState(false);
+  const [inner, setInner] = useState(defaultValue)
+  const open = valueProp ?? inner
+  const [instant, setInstant] = useState(false)
 
   const toggle = (id: string, fromKeyboard: boolean) => {
-    setInstant(fromKeyboard);
-    const isOpen = open.includes(id);
+    setInstant(fromKeyboard)
+    const isOpen = open.includes(id)
     const next = isOpen
       ? open.filter((o) => o !== id)
       : type === "single"
         ? [id]
-        : [...open, id];
-    if (valueProp === undefined) setInner(next);
-    onValueChange?.(next);
-  };
+        : [...open, id]
+    if (valueProp === undefined) setInner(next)
+    onValueChange?.(next)
+  }
 
   return (
     <MotionConfig reducedMotion="user">
@@ -163,27 +174,29 @@ export function Accordion({
             open={open.includes(item.id)}
             instant={instant}
             onToggle={(fromKeyboard) => toggle(item.id, fromKeyboard)}
-            className={open.includes(item.id) ? "bg-foreground/[0.03]" : undefined}
+            className={
+              open.includes(item.id) ? "bg-foreground/[0.03]" : undefined
+            }
           >
             {item.content}
           </Section>
         ))}
       </div>
     </MotionConfig>
-  );
+  )
 }
 
 export type CollapsibleProps = {
-  title: React.ReactNode;
-  icon?: Icon;
-  meta?: React.ReactNode;
-  open?: boolean;
-  defaultOpen?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  disabled?: boolean;
-  className?: string;
-  children: React.ReactNode;
-};
+  title: React.ReactNode
+  icon?: Icon
+  meta?: React.ReactNode
+  open?: boolean
+  defaultOpen?: boolean
+  onOpenChange?: (open: boolean) => void
+  disabled?: boolean
+  className?: string
+  children: React.ReactNode
+}
 
 /** A single collapsible section, e.g. reasoning or details under an answer. */
 export function Collapsible({
@@ -192,9 +205,9 @@ export function Collapsible({
   onOpenChange,
   ...props
 }: CollapsibleProps) {
-  const [inner, setInner] = useState(defaultOpen);
-  const open = openProp ?? inner;
-  const [instant, setInstant] = useState(false);
+  const [inner, setInner] = useState(defaultOpen)
+  const open = openProp ?? inner
+  const [instant, setInstant] = useState(false)
 
   return (
     <MotionConfig reducedMotion="user">
@@ -203,12 +216,12 @@ export function Collapsible({
         open={open}
         instant={instant}
         onToggle={(fromKeyboard) => {
-          setInstant(fromKeyboard);
-          if (openProp === undefined) setInner(!open);
-          onOpenChange?.(!open);
+          setInstant(fromKeyboard)
+          if (openProp === undefined) setInner(!open)
+          onOpenChange?.(!open)
         }}
         className={cn("bg-foreground/[0.03]", props.className)}
       />
     </MotionConfig>
-  );
+  )
 }

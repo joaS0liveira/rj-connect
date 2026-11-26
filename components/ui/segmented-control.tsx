@@ -1,26 +1,26 @@
-"use client";
+"use client"
 
-import { MotionConfig, motion } from "motion/react";
-import { useId, useRef, useState } from "react";
-import { spring } from "@/lib/motion-tokens";
-import { cn } from "@/lib/utils";
+import { MotionConfig, motion } from "motion/react"
+import { useId, useRef, useState } from "react"
+import { spring } from "@/lib/motion-tokens"
+import { cn } from "@/lib/utils"
 
 export type SegmentedOption<T extends string = string> = {
-  value: T;
-  label: React.ReactNode;
-  disabled?: boolean;
-};
+  value: T
+  label: React.ReactNode
+  disabled?: boolean
+}
 
 export type SegmentedProps<T extends string = string> = {
-  options: SegmentedOption<T>[];
-  value?: T;
-  defaultValue?: T;
-  onValueChange?: (value: T) => void;
+  options: SegmentedOption<T>[]
+  value?: T
+  defaultValue?: T
+  onValueChange?: (value: T) => void
   /** Accessible name for the group. */
-  label: string;
-  size?: "sm" | "md";
-  className?: string;
-};
+  label: string
+  size?: "sm" | "md"
+  className?: string
+}
 
 /**
  * Segmented control with a sliding active pill. Pointer changes slide the pill;
@@ -35,34 +35,40 @@ export function Segmented<T extends string = string>({
   size = "sm",
   className,
 }: SegmentedProps<T>) {
-  const [inner, setInner] = useState<T>(defaultValue ?? options[0]?.value);
-  const value = valueProp ?? inner;
-  const [instant, setInstant] = useState(false);
-  const pillId = useId();
-  const ref = useRef<HTMLDivElement>(null);
+  const [inner, setInner] = useState<T>(defaultValue ?? options[0]?.value)
+  const value = valueProp ?? inner
+  const [instant, setInstant] = useState(false)
+  const pillId = useId()
+  const ref = useRef<HTMLDivElement>(null)
 
   const select = (next: T, fromKeyboard: boolean) => {
-    setInstant(fromKeyboard);
-    if (valueProp === undefined) setInner(next);
-    onValueChange?.(next);
-  };
+    setInstant(fromKeyboard)
+    if (valueProp === undefined) setInner(next)
+    onValueChange?.(next)
+  }
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     // Left and right follow the reading direction: ArrowLeft moves forward in RTL.
-    const rtl = !!ref.current && getComputedStyle(ref.current).direction === "rtl";
-    const side = rtl ? -1 : 1;
-    const step = { ArrowRight: side, ArrowDown: 1, ArrowLeft: -side, ArrowUp: -1 }[e.key];
-    if (!step) return;
-    e.preventDefault();
-    const enabled = options.filter((o) => !o.disabled);
-    const at = enabled.findIndex((o) => o.value === value);
-    const next = enabled[(at + step + enabled.length) % enabled.length];
-    if (!next) return;
-    select(next.value, true);
+    const rtl =
+      !!ref.current && getComputedStyle(ref.current).direction === "rtl"
+    const side = rtl ? -1 : 1
+    const step = {
+      ArrowRight: side,
+      ArrowDown: 1,
+      ArrowLeft: -side,
+      ArrowUp: -1,
+    }[e.key]
+    if (!step) return
+    e.preventDefault()
+    const enabled = options.filter((o) => !o.disabled)
+    const at = enabled.findIndex((o) => o.value === value)
+    const next = enabled[(at + step + enabled.length) % enabled.length]
+    if (!next) return
+    select(next.value, true)
     ref.current
       ?.querySelector<HTMLButtonElement>(`[data-value="${next.value}"]`)
-      ?.focus();
-  };
+      ?.focus()
+  }
 
   return (
     <MotionConfig reducedMotion="user">
@@ -74,11 +80,11 @@ export function Segmented<T extends string = string>({
         className={cn(
           "inline-flex items-center rounded-full bg-foreground/[0.05] p-0.5",
           size === "sm" ? "h-8" : "h-9",
-          className,
+          className
         )}
       >
         {options.map((option) => {
-          const active = option.value === value;
+          const active = option.value === value
           return (
             <button
               key={option.value}
@@ -94,7 +100,7 @@ export function Segmented<T extends string = string>({
                 size === "sm" ? "px-3 text-[0.8125rem]" : "px-4 text-sm",
                 active
                   ? "text-foreground"
-                  : "text-muted-foreground hover:text-foreground",
+                  : "text-muted-foreground hover:text-foreground"
               )}
             >
               {active && (
@@ -106,9 +112,9 @@ export function Segmented<T extends string = string>({
               )}
               <span className="relative">{option.label}</span>
             </button>
-          );
+          )
         })}
       </div>
     </MotionConfig>
-  );
+  )
 }
