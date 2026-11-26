@@ -1,125 +1,147 @@
-"use client";
+"use client"
 
-import { CalendarBlank, CaretLeft, CaretRight } from "@phosphor-icons/react";
-import { AnimatePresence, MotionConfig, motion, useReducedMotion } from "motion/react";
-import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react";
-import { IconButton } from "@/components/ui/action-button";
-import { Popover } from "@/components/ui/popover-panel";
-import { EASE_OUT, instant } from "@/lib/motion-tokens";
-import { cn } from "@/lib/utils";
+import { CalendarBlank, CaretLeft, CaretRight } from "@phosphor-icons/react"
+import {
+  AnimatePresence,
+  MotionConfig,
+  motion,
+  useReducedMotion,
+} from "motion/react"
+import { useEffect, useId, useRef, useState, useSyncExternalStore } from "react"
+import { IconButton } from "@/components/ui/action-button"
+import { Popover } from "@/components/ui/popover-panel"
+import { EASE_OUT, instant } from "@/lib/motion-tokens"
+import { cn } from "@/lib/utils"
 
-export type DateRange = { from: Date | null; to: Date | null };
+export type DateRange = { from: Date | null; to: Date | null }
 
-const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate());
+const startOfDay = (d: Date) =>
+  new Date(d.getFullYear(), d.getMonth(), d.getDate())
 const addDays = (d: Date, n: number) =>
-  new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
-const addMonths = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth() + n, 1);
+  new Date(d.getFullYear(), d.getMonth(), d.getDate() + n)
+const addMonths = (d: Date, n: number) =>
+  new Date(d.getFullYear(), d.getMonth() + n, 1)
 const sameDay = (a?: Date | null, b?: Date | null) =>
-  !!a && !!b && a.toDateString() === b.toDateString();
-const key = (d: Date) => d.toDateString();
+  !!a && !!b && a.toDateString() === b.toDateString()
+const key = (d: Date) => d.toDateString()
 
 /** Weeks of the month, Monday first, padded with the neighbouring months' days. */
 function monthGrid(month: Date) {
-  const first = new Date(month.getFullYear(), month.getMonth(), 1);
-  const start = addDays(first, -((first.getDay() + 6) % 7));
+  const first = new Date(month.getFullYear(), month.getMonth(), 1)
+  const start = addDays(first, -((first.getDay() + 6) % 7))
   return Array.from({ length: 6 }, (_, w) =>
-    Array.from({ length: 7 }, (_, d) => addDays(start, w * 7 + d)),
-  );
+    Array.from({ length: 7 }, (_, d) => addDays(start, w * 7 + d))
+  )
 }
 
 // Today is only known in the browser; null during prerender keeps markup stable.
-const noop = () => () => {};
+const noop = () => () => {}
 function useToday() {
   const stamp = useSyncExternalStore(
     noop,
     () => new Date().toDateString(),
-    () => null,
-  );
-  return stamp ? new Date(stamp) : null;
+    () => null
+  )
+  return stamp ? new Date(stamp) : null
 }
 
 export type CalendarLabels = {
-  previousMonth: string;
-  nextMonth: string;
-};
+  previousMonth: string
+  nextMonth: string
+}
 
 const defaultLabels: CalendarLabels = {
   previousMonth: "Previous month",
   nextMonth: "Next month",
-};
+}
 
 type Common = {
-  min?: Date;
-  max?: Date;
+  min?: Date
+  max?: Date
   /** Return true for days that can't be picked, e.g. weekends. */
-  isDisabled?: (date: Date) => boolean;
+  isDisabled?: (date: Date) => boolean
   /** BCP 47 locale for month and weekday names. */
-  locale?: string;
+  locale?: string
   /** UI strings, for translating the month buttons. */
-  labels?: Partial<CalendarLabels>;
-  className?: string;
-};
+  labels?: Partial<CalendarLabels>
+  className?: string
+}
 
 export type CalendarProps = Common &
   (
-    | { mode?: "single"; value?: Date | null; onValueChange?: (date: Date) => void }
-    | { mode: "range"; value?: DateRange; onValueChange?: (range: DateRange) => void }
-  );
+    | {
+        mode?: "single"
+        value?: Date | null
+        onValueChange?: (date: Date) => void
+      }
+    | {
+        mode: "range"
+        value?: DateRange
+        onValueChange?: (range: DateRange) => void
+      }
+  )
 
 /** Month grid with single or range selection and full keyboard navigation. */
 export function Calendar(props: CalendarProps) {
-  const { min, max, isDisabled, locale, className } = props;
-  const labels = { ...defaultLabels, ...props.labels };
-  const range = props.mode === "range";
-  const reduce = useReducedMotion();
-  const selected = range ? (props.value as DateRange | undefined) : undefined;
-  const single = range ? undefined : (props.value as Date | null | undefined);
-  const anchor = (range ? selected?.from : single) ?? new Date();
+  const { min, max, isDisabled, locale, className } = props
+  const labels = { ...defaultLabels, ...props.labels }
+  const range = props.mode === "range"
+  const reduce = useReducedMotion()
+  const selected = range ? (props.value as DateRange | undefined) : undefined
+  const single = range ? undefined : (props.value as Date | null | undefined)
+  const anchor = (range ? selected?.from : single) ?? new Date()
 
-  const [month, setMonth] = useState(() => addMonths(anchor, 0));
-  const [focus, setFocus] = useState(() => startOfDay(anchor));
-  const [direction, setDirection] = useState(0);
+  const [month, setMonth] = useState(() => addMonths(anchor, 0))
+  const [focus, setFocus] = useState(() => startOfDay(anchor))
+  const [direction, setDirection] = useState(0)
   // Keyboard navigation changes months instantly.
-  const [viaKeys, setViaKeys] = useState(false);
-  const [hover, setHover] = useState<Date | null>(null);
-  const frame = useRef<HTMLDivElement>(null);
-  const titleId = useId();
-  const today = useToday();
+  const [viaKeys, setViaKeys] = useState(false)
+  const [hover, setHover] = useState<Date | null>(null)
+  const frame = useRef<HTMLDivElement>(null)
+  const titleId = useId()
+  const today = useToday()
 
   const blocked = (d: Date) =>
-    (min && d < startOfDay(min)) || (max && d > startOfDay(max)) || !!isDisabled?.(d);
+    (min && d < startOfDay(min)) ||
+    (max && d > startOfDay(max)) ||
+    !!isDisabled?.(d)
 
   const showMonth = (next: Date, keys: boolean) => {
     // Later months enter from the end side: the right in LTR, the left in RTL.
-    const rtl = !!frame.current && getComputedStyle(frame.current).direction === "rtl";
-    setDirection((next > month ? 1 : -1) * (rtl ? -1 : 1));
-    setViaKeys(keys);
-    setMonth(addMonths(next, 0));
-  };
+    const rtl =
+      !!frame.current && getComputedStyle(frame.current).direction === "rtl"
+    setDirection((next > month ? 1 : -1) * (rtl ? -1 : 1))
+    setViaKeys(keys)
+    setMonth(addMonths(next, 0))
+  }
 
   const pick = (d: Date) => {
-    if (blocked(d)) return;
-    setFocus(d);
-    if (!range) return (props.onValueChange as ((d: Date) => void) | undefined)?.(d);
-    const from = selected?.from ?? null;
-    const to = selected?.to ?? null;
+    if (blocked(d)) return
+    setFocus(d)
+    if (!range)
+      return (props.onValueChange as ((d: Date) => void) | undefined)?.(d)
+    const from = selected?.from ?? null
+    const to = selected?.to ?? null
     const next: DateRange =
-      !from || to || d < from ? { from: d, to: null } : { from, to: d };
-    (props.onValueChange as ((r: DateRange) => void) | undefined)?.(next);
-  };
+      !from || to || d < from ? { from: d, to: null } : { from, to: d }
+    ;(props.onValueChange as ((r: DateRange) => void) | undefined)?.(next)
+  }
 
   // Set by keyboard moves so focus follows the roving day, even into a new month grid.
-  const keepFocus = useRef(false);
+  const keepFocus = useRef(false)
   const moveFocus = (d: Date) => {
-    keepFocus.current = true;
-    setFocus(d);
-    if (d.getMonth() !== month.getMonth() || d.getFullYear() !== month.getFullYear())
-      showMonth(d, true);
-  };
+    keepFocus.current = true
+    setFocus(d)
+    if (
+      d.getMonth() !== month.getMonth() ||
+      d.getFullYear() !== month.getFullYear()
+    )
+      showMonth(d, true)
+  }
 
   const onKeyDown = (e: React.KeyboardEvent) => {
     // The grid mirrors under dir="rtl", so left and right swap meaning.
-    const back = getComputedStyle(e.currentTarget).direction === "rtl" ? 1 : -1;
+    const back = getComputedStyle(e.currentTarget).direction === "rtl" ? 1 : -1
     const moves: Record<string, () => Date> = {
       ArrowLeft: () => addDays(focus, back),
       ArrowRight: () => addDays(focus, -back),
@@ -127,55 +149,60 @@ export function Calendar(props: CalendarProps) {
       ArrowDown: () => addDays(focus, 7),
       Home: () => addDays(focus, -((focus.getDay() + 6) % 7)),
       End: () => addDays(focus, 6 - ((focus.getDay() + 6) % 7)),
-      PageUp: () => new Date(focus.getFullYear(), focus.getMonth() - 1, focus.getDate()),
+      PageUp: () =>
+        new Date(focus.getFullYear(), focus.getMonth() - 1, focus.getDate()),
       PageDown: () =>
         new Date(focus.getFullYear(), focus.getMonth() + 1, focus.getDate()),
-    };
-    if (moves[e.key]) {
-      e.preventDefault();
-      moveFocus(moves[e.key]());
-    } else if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      pick(focus);
     }
-  };
+    if (moves[e.key]) {
+      e.preventDefault()
+      moveFocus(moves[e.key]())
+    } else if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault()
+      pick(focus)
+    }
+  }
 
   // Keep DOM focus on the roving day after keyboard moves.
   useEffect(() => {
-    if (!keepFocus.current) return;
-    keepFocus.current = false;
+    if (!keepFocus.current) return
+    keepFocus.current = false
     // Query the live grid by month: during the slide the old grid is still mounted.
     frame.current
       ?.querySelector<HTMLElement>(
-        `[data-month="${month.toISOString()}"] [data-day="${key(focus)}"]`,
+        `[data-month="${month.toISOString()}"] [data-day="${key(focus)}"]`
       )
-      ?.focus();
-  }, [focus, month]);
+      ?.focus()
+  }, [focus, month])
 
   const inRange = (d: Date) => {
-    if (!range) return false;
-    const from = selected?.from;
-    const end = selected?.to ?? (from && hover && hover > from ? hover : null);
-    return !!from && !!end && d > from && d < end;
-  };
+    if (!range) return false
+    const from = selected?.from
+    const end = selected?.to ?? (from && hover && hover > from ? hover : null)
+    return !!from && !!end && d > from && d < end
+  }
 
   const weekdays = Array.from({ length: 7 }, (_, i) =>
     new Intl.DateTimeFormat(locale, { weekday: "narrow" }).format(
-      new Date(2024, 0, 1 + i),
-    ),
-  );
-  const dayNumber = new Intl.DateTimeFormat(locale, { day: "numeric" });
+      new Date(2024, 0, 1 + i)
+    )
+  )
+  const dayNumber = new Intl.DateTimeFormat(locale, { day: "numeric" })
   const monthLabel = new Intl.DateTimeFormat(locale, {
     month: "long",
     year: "numeric",
-  }).format(month);
-  const still = viaKeys || !!reduce;
+  }).format(month)
+  const still = viaKeys || !!reduce
 
   return (
     <MotionConfig reducedMotion="user">
       <div className={cn("w-[17.5rem] select-none", className)}>
         <div className="mb-2 flex items-center gap-1 ps-2">
-          <p id={titleId} aria-live="polite" className="flex-1 text-sm font-medium">
+          <p
+            id={titleId}
+            aria-live="polite"
+            className="flex-1 text-sm font-medium"
+          >
             {monthLabel}
           </p>
           <IconButton
@@ -212,28 +239,35 @@ export function Calendar(props: CalendarProps) {
               onKeyDown={onKeyDown}
               onMouseLeave={() => setHover(null)}
               custom={direction}
-              initial={{ x: still ? 0 : direction * 24, opacity: still ? 1 : 0 }}
+              initial={{
+                x: still ? 0 : direction * 24,
+                opacity: still ? 1 : 0,
+              }}
               animate={{
                 x: 0,
                 opacity: 1,
-                transition: still ? instant : { duration: 0.22, ease: EASE_OUT },
+                transition: still
+                  ? instant
+                  : { duration: 0.22, ease: EASE_OUT },
               }}
               exit={{
                 x: still ? 0 : direction * -24,
                 opacity: 0,
-                transition: still ? instant : { duration: 0.14, ease: EASE_OUT },
+                transition: still
+                  ? instant
+                  : { duration: 0.14, ease: EASE_OUT },
               }}
               className="flex flex-col gap-0.5"
             >
               {monthGrid(month).map((week, w) => (
                 <div key={w} role="row" className="grid grid-cols-7">
                   {week.map((d) => {
-                    const outside = d.getMonth() !== month.getMonth();
-                    const isStart = sameDay(d, range ? selected?.from : single);
-                    const isEnd = range && sameDay(d, selected?.to);
-                    const chosen = isStart || isEnd;
-                    const between = inRange(d);
-                    const off = blocked(d);
+                    const outside = d.getMonth() !== month.getMonth()
+                    const isStart = sameDay(d, range ? selected?.from : single)
+                    const isEnd = range && sameDay(d, selected?.to)
+                    const chosen = isStart || isEnd
+                    const between = inRange(d)
+                    const off = blocked(d)
                     return (
                       <div
                         key={key(d)}
@@ -246,7 +280,7 @@ export function Calendar(props: CalendarProps) {
                             isStart &&
                             (selected?.to || hover) &&
                             "rounded-s-full bg-brand/12",
-                          isEnd && "rounded-e-full bg-brand/12",
+                          isEnd && "rounded-e-full bg-brand/12"
                         )}
                       >
                         <button
@@ -268,7 +302,7 @@ export function Calendar(props: CalendarProps) {
                               : "hover:bg-foreground/[0.07]",
                             outside && !chosen && "text-muted-foreground/50",
                             off &&
-                              "cursor-default line-through opacity-35 hover:bg-transparent active:scale-100",
+                              "cursor-default line-through opacity-35 hover:bg-transparent active:scale-100"
                           )}
                         >
                           {dayNumber.format(d)}
@@ -277,13 +311,13 @@ export function Calendar(props: CalendarProps) {
                               aria-hidden="true"
                               className={cn(
                                 "absolute bottom-1 h-0.5 w-3 rounded-full",
-                                chosen ? "bg-white" : "bg-brand",
+                                chosen ? "bg-white" : "bg-brand"
                               )}
                             />
                           )}
                         </button>
                       </div>
-                    );
+                    )
                   })}
                 </div>
               ))}
@@ -292,18 +326,18 @@ export function Calendar(props: CalendarProps) {
         </div>
       </div>
     </MotionConfig>
-  );
+  )
 }
 
 export type DatePickerProps = Common & {
-  value?: Date | null;
-  defaultValue?: Date | null;
-  onValueChange?: (date: Date) => void;
-  label?: string;
-  placeholder?: string;
+  value?: Date | null
+  defaultValue?: Date | null
+  onValueChange?: (date: Date) => void
+  label?: string
+  placeholder?: string
   /** Intl options for the trigger text. */
-  formatOptions?: Intl.DateTimeFormatOptions;
-};
+  formatOptions?: Intl.DateTimeFormatOptions
+}
 
 /** A field-like trigger that opens the calendar in a popover and closes on pick. */
 export function DatePicker({
@@ -317,10 +351,10 @@ export function DatePicker({
   className,
   ...calendar
 }: DatePickerProps) {
-  const [inner, setInner] = useState<Date | null>(defaultValue);
-  const value = valueProp === undefined ? inner : valueProp;
-  const [open, setOpen] = useState(false);
-  const labelId = useId();
+  const [inner, setInner] = useState<Date | null>(defaultValue)
+  const value = valueProp === undefined ? inner : valueProp
+  const [open, setOpen] = useState(false)
+  const labelId = useId()
 
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
@@ -346,7 +380,12 @@ export function DatePicker({
               aria-hidden="true"
               className="size-4 text-muted-foreground"
             />
-            <span className={cn("flex-1 truncate", !value && "text-muted-foreground")}>
+            <span
+              className={cn(
+                "flex-1 truncate",
+                !value && "text-muted-foreground"
+              )}
+            >
               {value
                 ? new Intl.DateTimeFormat(locale, formatOptions).format(value)
                 : placeholder}
@@ -359,12 +398,12 @@ export function DatePicker({
           locale={locale}
           value={value}
           onValueChange={(d) => {
-            if (valueProp === undefined) setInner(d);
-            onValueChange?.(d);
-            setOpen(false);
+            if (valueProp === undefined) setInner(d)
+            onValueChange?.(d)
+            setOpen(false)
           }}
         />
       </Popover>
     </div>
-  );
+  )
 }

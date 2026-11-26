@@ -1,39 +1,39 @@
-import { ArrowClockwise, WarningCircle, type Icon } from "@phosphor-icons/react";
-import { Button } from "@/components/ui/action-button";
-import { cn } from "@/lib/utils";
+import { ArrowClockwise, WarningCircle, type Icon } from "@phosphor-icons/react"
+import { Button } from "@/components/ui/action-button"
+import { cn } from "@/lib/utils"
 
 export type EmptyStateAction = {
-  label: string;
-  onClick: () => void;
-  icon?: Icon;
+  label: string
+  onClick: () => void
+  icon?: Icon
   /** Line glyphs (plus, arrows) read better bold; shapes stay filled. */
-  iconWeight?: "fill" | "bold";
-};
+  iconWeight?: "fill" | "bold"
+}
 
 export type EmptyStateLabels = {
   /** The automatic action for `tone="error"` with `onRetry`. */
-  retry: string;
-};
+  retry: string
+}
 
-const defaultLabels: EmptyStateLabels = { retry: "Retry" };
+const defaultLabels: EmptyStateLabels = { retry: "Retry" }
 
 export type EmptyStateProps = {
   /** Phosphor icon, filled. Defaults to a warning for `tone="error"`. */
-  icon?: Icon;
-  title: React.ReactNode;
-  description?: React.ReactNode;
+  icon?: Icon
+  title: React.ReactNode
+  description?: React.ReactNode
   /** Silver primary action. */
-  action?: EmptyStateAction;
-  secondaryAction?: EmptyStateAction;
+  action?: EmptyStateAction
+  secondaryAction?: EmptyStateAction
   /** `error` tints the icon and, with `onRetry`, adds a Retry action. */
-  tone?: "neutral" | "error";
-  onRetry?: () => void;
+  tone?: "neutral" | "error"
+  onRetry?: () => void
   /** Tighter spacing and a row layout, for empty lists inside a panel. */
-  compact?: boolean;
+  compact?: boolean
   /** Your own UI strings, for translating. */
-  labels?: Partial<EmptyStateLabels>;
-  className?: string;
-};
+  labels?: Partial<EmptyStateLabels>
+  className?: string
+}
 
 export function EmptyState({
   icon,
@@ -47,9 +47,9 @@ export function EmptyState({
   labels: labelOverrides,
   className,
 }: EmptyStateProps) {
-  const labels = { ...defaultLabels, ...labelOverrides };
-  const error = tone === "error";
-  const IconComponent = icon ?? (error ? WarningCircle : undefined);
+  const labels = { ...defaultLabels, ...labelOverrides }
+  const error = tone === "error"
+  const IconComponent = icon ?? (error ? WarningCircle : undefined)
   const primary =
     action ??
     (error && onRetry
@@ -59,7 +59,7 @@ export function EmptyState({
           icon: ArrowClockwise,
           iconWeight: "bold" as const,
         }
-      : undefined);
+      : undefined)
 
   return (
     <div
@@ -69,7 +69,7 @@ export function EmptyState({
         compact
           ? "items-center gap-3 px-3 py-3 text-start"
           : "flex-col items-center px-6 py-10 text-center",
-        className,
+        className
       )}
     >
       {IconComponent && (
@@ -80,21 +80,29 @@ export function EmptyState({
             compact ? "size-9 rounded-xl" : "mb-4 size-12 rounded-2xl",
             error
               ? "bg-negative/12 text-negative"
-              : "bg-foreground/[0.06] text-muted-foreground",
+              : "bg-foreground/[0.06] text-muted-foreground"
           )}
         >
-          <IconComponent weight="fill" className={compact ? "size-4" : "size-5"} />
+          <IconComponent
+            weight="fill"
+            className={compact ? "size-4" : "size-5"}
+          />
         </div>
       )}
       <div className={cn("min-w-0", compact && "flex-1")}>
-        <p className={cn("font-medium", compact ? "text-sm" : "text-[0.9375rem]")}>
+        <p
+          className={cn(
+            "font-medium",
+            compact ? "text-sm" : "text-[0.9375rem]"
+          )}
+        >
           {title}
         </p>
         {description && (
           <p
             className={cn(
               "text-[0.8125rem] text-pretty text-muted-foreground",
-              compact ? "mt-0.5" : "mx-auto mt-1 max-w-xs",
+              compact ? "mt-0.5" : "mx-auto mt-1 max-w-xs"
             )}
           >
             {description}
@@ -102,7 +110,9 @@ export function EmptyState({
         )}
       </div>
       {(primary || secondaryAction) && (
-        <div className={cn("flex shrink-0 items-center gap-2", !compact && "mt-5")}>
+        <div
+          className={cn("flex shrink-0 items-center gap-2", !compact && "mt-5")}
+        >
           {secondaryAction && (
             <Button
               variant="quiet"
@@ -126,5 +136,5 @@ export function EmptyState({
         </div>
       )}
     </div>
-  );
+  )
 }

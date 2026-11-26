@@ -1,5 +1,5 @@
-import type { Icon } from "@phosphor-icons/react";
-import { cn } from "@/lib/utils";
+import type { Icon } from "@phosphor-icons/react"
+import { cn } from "@/lib/utils"
 
 /*
  * Depth without borders: a `Shell` holds `Panel`s, a panel holds `Inset`
@@ -7,26 +7,39 @@ import { cn } from "@/lib/utils";
  * component needs for its frame.
  */
 
-type DivProps = React.ComponentProps<"div">;
+type DivProps = React.ComponentProps<"div">
 
 /** Outer frame. Headers and footers sit in its padding, content in panels. */
-export function Shell({ className, ...props }: React.ComponentProps<"section">) {
+export function Shell({
+  className,
+  ...props
+}: React.ComponentProps<"section">) {
   return (
     <section
-      className={cn("@container w-full rounded-[1.375rem] bg-surface p-1.5", className)}
+      className={cn(
+        "@container w-full rounded-[1.375rem] bg-surface p-1.5",
+        className
+      )}
       {...props}
     />
-  );
+  )
 }
 
 /** Main content area inside a shell. */
 export function Panel({ className, ...props }: DivProps) {
-  return <div className={cn("rounded-2xl bg-surface-inset", className)} {...props} />;
+  return (
+    <div className={cn("rounded-2xl bg-surface-inset", className)} {...props} />
+  )
 }
 
 /** One level deeper: code, payloads, details inside a panel. */
 export function Inset({ className, ...props }: DivProps) {
-  return <div className={cn("rounded-xl bg-foreground/[0.04]", className)} {...props} />;
+  return (
+    <div
+      className={cn("rounded-xl bg-foreground/[0.04]", className)}
+      {...props}
+    />
+  )
 }
 
 /** Icon in a tinted square. Pass a Phosphor icon, or children for anything else. */
@@ -41,24 +54,28 @@ export function IconTile({
       aria-hidden="true"
       className={cn(
         "flex size-9 shrink-0 items-center justify-center rounded-xl bg-foreground/[0.06] text-muted-foreground",
-        className,
+        className
       )}
       {...props}
     >
-      {IconComponent ? <IconComponent weight="fill" className="size-4" /> : children}
+      {IconComponent ? (
+        <IconComponent weight="fill" className="size-4" />
+      ) : (
+        children
+      )}
     </div>
-  );
+  )
 }
 
 export type ShellHeaderProps = Omit<DivProps, "title"> & {
-  icon?: Icon;
-  title: React.ReactNode;
-  subtitle?: React.ReactNode;
+  icon?: Icon
+  title: React.ReactNode
+  subtitle?: React.ReactNode
   /** End side (right in LTR): a stat, a pill or actions. Vertically centered with the title. */
-  aside?: React.ReactNode;
+  aside?: React.ReactNode
   /** Heading level for the title. */
-  as?: "h2" | "h3" | "h4";
-};
+  as?: "h2" | "h3" | "h4"
+}
 
 /**
  * Header row for a shell. The icon tile sits 12px from the shell edge, in line
@@ -75,17 +92,24 @@ export function ShellHeader({
 }: ShellHeaderProps) {
   return (
     <div
-      className={cn("flex items-center gap-3 ps-1.5 pe-3.5 pt-1.5 pb-3", className)}
+      className={cn(
+        "flex items-center gap-3 ps-1.5 pe-3.5 pt-1.5 pb-3",
+        className
+      )}
       {...props}
     >
       {icon && <IconTile icon={icon} />}
       <div className={cn("min-w-0 flex-1", !icon && "ps-2")}>
-        <Heading className="truncate text-[0.9375rem] font-medium">{title}</Heading>
+        <Heading className="truncate text-[0.9375rem] font-medium">
+          {title}
+        </Heading>
         {subtitle && (
-          <p className="truncate text-[0.8125rem] text-muted-foreground">{subtitle}</p>
+          <p className="truncate text-[0.8125rem] text-muted-foreground">
+            {subtitle}
+          </p>
         )}
       </div>
       {aside && <div className="flex shrink-0 items-center gap-2">{aside}</div>}
     </div>
-  );
+  )
 }

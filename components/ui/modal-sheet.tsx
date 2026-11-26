@@ -1,73 +1,79 @@
-"use client";
+"use client"
 
-import { X } from "@phosphor-icons/react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { Dialog as DialogPrimitive } from "radix-ui";
-import { createContext, useContext, useLayoutEffect, useRef, useState } from "react";
-import { IconButton } from "@/components/ui/action-button";
-import { EASE_OUT } from "@/lib/motion-tokens";
-import { cn } from "@/lib/utils";
+import { X } from "@phosphor-icons/react"
+import { AnimatePresence, motion, useReducedMotion } from "motion/react"
+import { Dialog as DialogPrimitive } from "radix-ui"
+import {
+  createContext,
+  useContext,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react"
+import { IconButton } from "@/components/ui/action-button"
+import { EASE_OUT } from "@/lib/motion-tokens"
+import { cn } from "@/lib/utils"
 
 // Radix's `asChild`, passed as a spread: the shadcn CLI rewrites a literal
 // `asChild` attribute into Base UI's `render` prop for base-* styles, which
 // would break these Radix parts after install.
-const slot = { asChild: true } as const;
+const slot = { asChild: true } as const
 
 // Drawer curve for sheets; dialogs use the regular strong ease-out.
-const DRAWER = [0.32, 0.72, 0, 1] as const;
+const DRAWER = [0.32, 0.72, 0, 1] as const
 
 type OverlayProps = {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   /** Optional element that opens it; otherwise control `open` yourself. */
-  trigger?: React.ReactElement;
-  title: React.ReactNode;
-  description?: React.ReactNode;
-  children?: React.ReactNode;
+  trigger?: React.ReactElement
+  title: React.ReactNode
+  description?: React.ReactNode
+  children?: React.ReactNode
   /** Actions row, usually Buttons. Sits at the bottom, end-aligned. */
-  footer?: React.ReactNode;
+  footer?: React.ReactNode
   /** UI strings, for translating. */
-  labels?: Partial<ModalLabels>;
-  className?: string;
-};
+  labels?: Partial<ModalLabels>
+  className?: string
+}
 
 export type ModalLabels = {
-  close: string;
-};
+  close: string
+}
 
-const defaultLabels: ModalLabels = { close: "Close" };
-const Labels = createContext(defaultLabels);
+const defaultLabels: ModalLabels = { close: "Close" }
+const Labels = createContext(defaultLabels)
 
 /**
  * The portal renders under <body>, outside any `dir="rtl"` wrapper, so the
  * direction is read where the component sits and set on the panel itself.
  */
 function useDirection(open: boolean) {
-  const marker = useRef<HTMLSpanElement>(null);
-  const [dir, setDir] = useState<"ltr" | "rtl">("ltr");
+  const marker = useRef<HTMLSpanElement>(null)
+  const [dir, setDir] = useState<"ltr" | "rtl">("ltr")
   useLayoutEffect(() => {
     const read = () =>
       marker.current && getComputedStyle(marker.current).direction === "rtl"
         ? "rtl"
-        : "ltr";
-    setDir(read());
-  }, [open]);
-  return { dir, marker: <span ref={marker} hidden /> };
+        : "ltr"
+    setDir(read())
+  }, [open])
+  return { dir, marker: <span ref={marker} hidden /> }
 }
 
 function useOpen(open?: boolean, onOpenChange?: (open: boolean) => void) {
-  const [state, setState] = useState(false);
+  const [state, setState] = useState(false)
   return [
     open ?? state,
     (next: boolean) => {
-      setState(next);
-      onOpenChange?.(next);
+      setState(next)
+      onOpenChange?.(next)
     },
-  ] as const;
+  ] as const
 }
 
 const surface =
-  "bg-surface text-foreground shadow-[0_24px_64px_-16px_rgb(0_0_0/0.35)] outline-none dark:shadow-[0_24px_64px_-16px_rgb(0_0_0/0.8)]";
+  "bg-surface text-foreground shadow-[0_24px_64px_-16px_rgb(0_0_0/0.35)] outline-none dark:shadow-[0_24px_64px_-16px_rgb(0_0_0/0.8)]"
 
 function Overlay() {
   return (
@@ -79,11 +85,14 @@ function Overlay() {
         className="fixed inset-0 z-50 bg-black/40 dark:bg-black/60"
       />
     </DialogPrimitive.Overlay>
-  );
+  )
 }
 
-function Header({ title, description }: Pick<OverlayProps, "title" | "description">) {
-  const labels = useContext(Labels);
+function Header({
+  title,
+  description,
+}: Pick<OverlayProps, "title" | "description">) {
+  const labels = useContext(Labels)
   return (
     <div className="flex items-start gap-3 ps-2.5 pe-1 pt-1.5 pb-3">
       <div className="min-w-0 flex-1 pt-1">
@@ -104,12 +113,12 @@ function Header({ title, description }: Pick<OverlayProps, "title" | "descriptio
         <IconButton icon={X} iconWeight="bold" label={labels.close} />
       </DialogPrimitive.Close>
     </div>
-  );
+  )
 }
 
-const sizes = { sm: "max-w-sm", md: "max-w-md", lg: "max-w-xl" } as const;
+const sizes = { sm: "max-w-sm", md: "max-w-md", lg: "max-w-xl" } as const
 
-export type DialogProps = OverlayProps & { size?: keyof typeof sizes };
+export type DialogProps = OverlayProps & { size?: keyof typeof sizes }
 
 /** Centered modal. Focus is trapped, the page doesn't scroll, Esc and the backdrop close it. */
 export function Dialog({
@@ -124,14 +133,16 @@ export function Dialog({
   labels,
   className,
 }: DialogProps) {
-  const reduce = useReducedMotion();
-  const [open, setOpen] = useOpen(openProp, onOpenChange);
-  const { dir, marker } = useDirection(open);
+  const reduce = useReducedMotion()
+  const [open, setOpen] = useOpen(openProp, onOpenChange)
+  const { dir, marker } = useDirection(open)
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
       {marker}
-      {trigger && <DialogPrimitive.Trigger {...slot}>{trigger}</DialogPrimitive.Trigger>}
+      {trigger && (
+        <DialogPrimitive.Trigger {...slot}>{trigger}</DialogPrimitive.Trigger>
+      )}
       <AnimatePresence>
         {open && (
           <DialogPrimitive.Portal forceMount>
@@ -155,7 +166,7 @@ export function Dialog({
                     surface,
                     "w-full rounded-[1.375rem] p-1.5",
                     sizes[size],
-                    className,
+                    className
                   )}
                 >
                   <Labels.Provider value={{ ...defaultLabels, ...labels }}>
@@ -178,7 +189,7 @@ export function Dialog({
         )}
       </AnimatePresence>
     </DialogPrimitive.Root>
-  );
+  )
 }
 
 const sides = {
@@ -190,10 +201,13 @@ const sides = {
     className: "inset-y-2 right-2 w-[min(24rem,calc(100vw-1rem))]",
     hidden: { x: "105%" },
   },
-  bottom: { className: "inset-x-2 bottom-2 max-h-[85vh]", hidden: { y: "105%" } },
-} as const;
+  bottom: {
+    className: "inset-x-2 bottom-2 max-h-[85vh]",
+    hidden: { y: "105%" },
+  },
+} as const
 
-type Side = "start" | "end" | keyof typeof sides;
+type Side = "start" | "end" | keyof typeof sides
 
 /** Start and end resolve to left or right by the reading direction. */
 const physical = (side: Side, dir: "ltr" | "rtl") =>
@@ -205,9 +219,9 @@ const physical = (side: Side, dir: "ltr" | "rtl") =>
       ? dir === "rtl"
         ? "left"
         : "right"
-      : side;
+      : side
 
-export type SheetProps = OverlayProps & { side?: Side };
+export type SheetProps = OverlayProps & { side?: Side }
 
 /** Panel that slides in from an edge — chat history on mobile, settings, details. */
 export function Sheet({
@@ -222,16 +236,18 @@ export function Sheet({
   labels,
   className,
 }: SheetProps) {
-  const reduce = useReducedMotion();
-  const [open, setOpen] = useOpen(openProp, onOpenChange);
-  const { dir, marker } = useDirection(open);
-  const edge = sides[physical(side, dir)];
-  const hidden = reduce ? { opacity: 0 } : edge.hidden;
+  const reduce = useReducedMotion()
+  const [open, setOpen] = useOpen(openProp, onOpenChange)
+  const { dir, marker } = useDirection(open)
+  const edge = sides[physical(side, dir)]
+  const hidden = reduce ? { opacity: 0 } : edge.hidden
 
   return (
     <DialogPrimitive.Root open={open} onOpenChange={setOpen}>
       {marker}
-      {trigger && <DialogPrimitive.Trigger {...slot}>{trigger}</DialogPrimitive.Trigger>}
+      {trigger && (
+        <DialogPrimitive.Trigger {...slot}>{trigger}</DialogPrimitive.Trigger>
+      )}
       <AnimatePresence>
         {open && (
           <DialogPrimitive.Portal forceMount>
@@ -246,12 +262,15 @@ export function Sheet({
                   opacity: 1,
                   transition: { duration: reduce ? 0.2 : 0.4, ease: DRAWER },
                 }}
-                exit={{ ...hidden, transition: { duration: 0.22, ease: DRAWER } }}
+                exit={{
+                  ...hidden,
+                  transition: { duration: 0.22, ease: DRAWER },
+                }}
                 className={cn(
                   surface,
                   "fixed z-50 flex flex-col rounded-[1.375rem] p-1.5",
                   edge.className,
-                  className,
+                  className
                 )}
               >
                 <Labels.Provider value={{ ...defaultLabels, ...labels }}>
@@ -273,8 +292,8 @@ export function Sheet({
         )}
       </AnimatePresence>
     </DialogPrimitive.Root>
-  );
+  )
 }
 
 /** Closes the dialog or sheet it's inside of, e.g. around a Cancel button. */
-export const DialogClose = DialogPrimitive.Close;
+export const DialogClose = DialogPrimitive.Close
