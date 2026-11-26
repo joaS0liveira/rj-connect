@@ -91,7 +91,7 @@ export const ENTITY_IDS = Object.keys(PLACES) as EntityId[]
  */
 export const PARTS: Partial<Record<EntityId, EntityId[]>> = {
   E01: ["E01", "E05"],
-  E04: ["E03", "E06", "E07"],
+  E04: ["E04", "E03", "E06", "E07"],
 }
 
 /** The regions lit up when this one is chosen. */

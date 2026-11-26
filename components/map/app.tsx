@@ -353,9 +353,9 @@ export function PortugalMap({
               }
             />
             <rect
-              x={SOUTH.x - 19}
+              x={SOUTH.x - 23}
               y={LABELS.E04[1] - 15}
-              width={38}
+              width={46}
               height={showRate("E04") ? 30 : 20}
               rx={6}
               fill={fill("E04")}
